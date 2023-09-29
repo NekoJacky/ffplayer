@@ -14,26 +14,27 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-add_subdirectory(src)
-add_subdirectory(ffmpeg)
-
 include_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/include)
 link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib)
 
-add_executable(ffplayer main.cpp)
+add_subdirectory(src)
+add_subdirectory(ffmpeg)
+
+add_executable(ffplayer main.cpp
+)
 
 target_link_libraries(ffplayer
         Qt::Core
         Qt::Gui
         Qt::Widgets
-        avcodec
         avdevice
         avfilter
         avformat
+        avcodec
         avutil
+        swresample
         postproc
         swscale
-        swresample
 
         src
         ff_src
