@@ -57,8 +57,8 @@ public:
     int32_t open(const char *FilePath);
     void close();
     int32_t readFrame();
-    int32_t decode_packet_to_frame(AVCodecContext *pAVCodecContext, AVPacket *pAVPacket, AVFrame **pAVFrame);
-    void enquene(AVFrame *pAVFrame);
+    static int32_t decode_packet_to_frame(AVCodecContext *pAVCodecContext, AVPacket *pAVPacket, AVFrame **pAVFrame);
+    void enqueue(AVFrame *pAVFrame);
 
 }; // class decoder
 

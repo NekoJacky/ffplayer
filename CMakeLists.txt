@@ -14,16 +14,29 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-aux_source_directory(./src SRC)
+add_subdirectory(src)
+add_subdirectory(ffmpeg)
 
 include_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/include)
 link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib)
 
-add_executable(ffplayer main.cpp ${SRC})
+add_executable(ffplayer main.cpp)
+
 target_link_libraries(ffplayer
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        avcodec
+        avdevice
+        avfilter
+        avformat
+        avutil
+        postproc
+        swscale
+        swresample
+
+        src
+        ff_src
 )
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)

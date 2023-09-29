@@ -6,7 +6,7 @@ int32_t player::decoder::open(const char *FilePath)
     
     AVCodec *pVideoDecoder = nullptr;
     AVCodec *pAudioDecoder = nullptr;
-    int     res            = 0;
+    int     res;
     
     res = avformat_open_input(&pAVFormatContext, FilePath, nullptr, nullptr);
     if(pAVFormatContext == nullptr)
@@ -52,7 +52,7 @@ int32_t player::decoder::open(const char *FilePath)
         {
             if((pAVStream->codecpar->channels <= 0) || (pAVStream->codecpar->sample_rate <= 0))
             {
-                std::clog << "Invalid Audeo Stream, Stream Index:" << i << std::endl;
+                std::clog << "Invalid Audio Stream, Stream Index:" << i << std::endl;
                 continue;
             }
             pAudioDecoder = const_cast<AVCodec*>(avcodec_find_decoder(pAVStream->codecpar->codec_id));
@@ -75,53 +75,46 @@ int32_t player::decoder::open(const char *FilePath)
     }
 
     // seek到0ms读取
-    res = avformat_seek_file(pAVFormatContext, -1, INT64_MIN, 0, INT64_MAX, 0);
+    avformat_seek_file(pAVFormatContext, -1, INT64_MIN, 0, INT64_MAX, 0);
 
     // 创建视频/音频解码器并打开
-    if(pVideoDecoder != nullptr)
+    pVideoDecodeContext = avcodec_alloc_context3(pVideoDecoder);
+    if(pVideoDecodeContext == nullptr)
     {
-        pVideoDecodeContext = avcodec_alloc_context3(pVideoDecoder);
-        if(pVideoDecodeContext == nullptr)
-        {
-            std::clog << "Fail to Alloc a Video Decoder Context" << std::endl;
-            close();
-            return -1;
-        }
-
-        // 将编解码器参数从AVCodecContext中分离出来
-        res = avcodec_parameters_to_context(
-            pVideoDecodeContext,
-            pAVFormatContext->streams[VideoStreamIndex]->codecpar
-        );
-        res = avcodec_open2(pVideoDecodeContext, nullptr, nullptr);
-        if(res != 0)
-        {
-            std::clog << "Fail to Open a Video Codec, code " << res << std::endl;
-            close();
-            return -1;
-        }
+        std::clog << "Fail to Alloc a Video Decoder Context" << std::endl;
+        close();
+        return -1;
     }
-    if(pAudioDecoder != nullptr)
+    // 将编解码器参数从AVCodecContext中分离出来
+    avcodec_parameters_to_context(
+        pVideoDecodeContext,
+        pAVFormatContext->streams[VideoStreamIndex]->codecpar
+    );
+    res = avcodec_open2(pVideoDecodeContext, nullptr, nullptr);
+    if(res != 0)
     {
-        pAudioDecodeContext = avcodec_alloc_context3(pAudioDecoder);
-        if(pAudioDecodeContext == nullptr)
-        {
-            std::clog << "Fail to Alloc a Audio Decoder Context" << std::endl;
-            close();
-            return -1;
-        }
+        std::clog << "Fail to Open a Video Codec, code " << res << std::endl;
+        close();
+        return -1;
+    }
 
-        res = avcodec_parameters_to_context(
-            pAudioDecodeContext,
-            pAVFormatContext->streams[AudioStreamIndex]->codecpar
-        );
-        res = avcodec_open2(pAudioDecodeContext, nullptr, nullptr);
-        if(res != 0)
-        {
-            std::clog << "Fail to Open a Audio Codec, code " << res << std::endl;
-            close();
-            return -1;
-        }
+    pAudioDecodeContext = avcodec_alloc_context3(pAudioDecoder);
+    if(pAudioDecodeContext == nullptr)
+    {
+        std::clog << "Fail to Alloc a Audio Decoder Context" << std::endl;
+        close();
+        return -1;
+    }
+    avcodec_parameters_to_context(
+        pAudioDecodeContext,
+        pAVFormatContext->streams[AudioStreamIndex]->codecpar
+    );
+    res = avcodec_open2(pAudioDecodeContext, nullptr, nullptr);
+    if(res != 0)
+    {
+        std::clog << "Fail to Open a Audio Codec, code " << res << std::endl;
+        close();
+        return -1;
     }
 
     return 0;
@@ -153,7 +146,7 @@ void player::decoder::close()
 // 读取音视频包进行解码
 int32_t player::decoder::readFrame()
 {
-    int res = 0;
+    int res;
     while(true)
     {
         AVPacket* pAVPacket = av_packet_alloc();
@@ -178,7 +171,7 @@ int32_t player::decoder::readFrame()
             res = decode_packet_to_frame(pVideoDecodeContext, pAVPacket, &pVideoFrame);
             if(res == 0 && pVideoFrame != nullptr)
             {
-                enquene(pVideoFrame);
+                enqueue(pVideoFrame);
             }
         }
         else if(pAVPacket->stream_index == AudioStreamIndex)
@@ -187,7 +180,7 @@ int32_t player::decoder::readFrame()
             res = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame);
             if(res == 0 && pAudioFrame != nullptr)
             {
-                enquene(pAudioFrame);
+                enqueue(pAudioFrame);
             }
         }
 
@@ -214,7 +207,7 @@ int32_t player::decoder::readFrame()
 int32_t player::decoder::decode_packet_to_frame(AVCodecContext *pDecoderContext, AVPacket *pInPacket, AVFrame **ppOutFrame)
 {
     AVFrame *pOutFrame  = nullptr;
-    int     res         = 0;
+    int     res;
     
     // 开始解码
     res = avcodec_send_packet(pDecoderContext, pInPacket);
@@ -250,7 +243,7 @@ int32_t player::decoder::decode_packet_to_frame(AVCodecContext *pDecoderContext,
     }
     else if(res < 0)
     {
-        std::clog << "Fali to Receive Frame from AVCodec" << std::endl;
+        std::clog << "Fail to Receive Frame from AVCodec" << std::endl;
         av_frame_free(&pOutFrame);
         (*ppOutFrame) = nullptr;
         return res;
@@ -260,7 +253,7 @@ int32_t player::decoder::decode_packet_to_frame(AVCodecContext *pDecoderContext,
     return 0;
 }
 
-void player::decoder::enquene(AVFrame *pAVFrame)
+void player::decoder::enqueue(AVFrame *pAVFrame)
 {
     // ...
 }
