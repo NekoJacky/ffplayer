@@ -14,7 +14,12 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-add_executable(ffplayer main.cpp)
+aux_source_directory(./src SRC)
+
+include_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/include)
+link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib)
+
+add_executable(ffplayer main.cpp ${SRC})
 target_link_libraries(ffplayer
         Qt::Core
         Qt::Gui
