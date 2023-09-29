@@ -1,0 +1,12 @@
+# dir
+/.vscode
+/.idea
+/cmake-build-debug
+/cmake-build-release
+
+# files endswith
+*.mp4
+
+#files
+encoder.h
+encoder.cpp
