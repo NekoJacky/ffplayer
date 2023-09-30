@@ -1,5 +1,8 @@
-#ifndef FFPLAY_DECODER_H
-#define FFPLAY_DECODER_H
+/* ff_player::decoder
+ * 解码器 */
+
+#ifndef FF_PLAYER_DECODER_H_
+#define FF_PLAYER_DECODER_H_
 
 #include <iostream>
 
@@ -14,6 +17,7 @@ extern "C"
 #endif
 
 /*
+用到的struct:
     AVFormatContext
         主要存储视音频封装格式中包含的信息 用于解封装
     AVStream
@@ -31,7 +35,7 @@ extern "C"
         存放解码后数据
 */
 
-namespace ffplayer
+namespace ff_player
 {
 
 class decoder
@@ -55,9 +59,53 @@ public:
     }
 
 public:
+    /**
+     * @brief 打开并解析媒体文件
+     * 注意，open()函数只用来解封装，解码媒体文件请使用read_frame()
+     * @see read_frame()
+     * @see decode_packet_to_frame()
+     * @param FilePath  需要解析的文件的路径
+     * @retval 0    成功打开并解析文件
+     * @retval -1   出现错误，具体错误查看控制台中输出的信息
+     * */
     int32_t open(const char *FilePath);
+
+    /**
+     * @brief 关闭打开的媒体文件，释放系统资源
+     * */
     void close();
-    int32_t readFrame();
+
+    /**
+     * @brief 读取音视频包，调用decode_packet_to_frame进行解码
+     * @see decode_packet_to_frame()
+     * @retval 0 读取结束
+     * */
+    int32_t read_frame();
+
+    /**
+     * @brief 解码器核心方法
+     * avcodec_send_packet() 和 avcodec_receive_frame() 通常是同时使用的
+     * 先调用 avcodec_send_packet() 送入要解码的数据包
+     * 然后调用 avcodec_receive_frame()获取解码后的音视频数据
+     *      这两个函数是异步的，内部有缓冲区
+     *      因此可能出现缓冲区满或者缓冲区无内容的情况
+     *
+     *      通常解码开始，通过avcodec_send_packet()送入几十个数据包
+     *      对应的avcodec_receive_frame()都没有音视频帧输出
+     *      等送入的数据包足够多后，avcodec_receive_frame()才开始输出前面一开始送入进行解码的音视频帧
+     *      最后几十没有数据包送入了，也要调用avcodec_send_packet()送入空数据包，以驱动解码模块继续解码缓冲区中的数据
+     *      此时avcodec_receive_frame()还是会有音视频帧输出
+     *      直到返回AVERROR_EOF才表示所有数据包解码完成。
+     * @param pAVCodecContext   输入数据包的相关解码数据
+     * @param pAVPacket         需要解码的数据包
+     * @param pAVFrame          用于接收解码后数据
+     * @retval 0                成功解码
+     * @retval AVERROR(EAGAIN)  输入端：缓冲区已满，无法接收新的数据
+     * @retval AVERROR(EAGAIN)  输出端：输出不可用，需要更多输入才可以输出
+     * @retval AVERROR(EOF)     输入端：到达输入文件末尾
+     * @retval AVERROR_EOF      输出端：到达输出文件末尾，所有数据包解码完成
+     * @retval -1               无法获得输出流
+     * */
     static int32_t decode_packet_to_frame(AVCodecContext *pAVCodecContext, AVPacket *pAVPacket, AVFrame **pAVFrame);
 
 }; // class decoder

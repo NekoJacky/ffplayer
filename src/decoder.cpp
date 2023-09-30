@@ -1,7 +1,6 @@
 #include "decoder.h"
 
-// 打开并解析媒体文件
-int32_t ffplayer::decoder::open(const char *FilePath)
+int32_t ff_player::decoder::open(const char *FilePath)
 {
     
     AVCodec *pVideoDecoder = nullptr;
@@ -12,7 +11,7 @@ int32_t ffplayer::decoder::open(const char *FilePath)
     if(pAVFormatContext == nullptr)
     {
         std::clog << "Can't Open the File" << std::endl;
-        return res;
+        return -1;
     }
 
     // 读取媒体流信息
@@ -122,7 +121,7 @@ int32_t ffplayer::decoder::open(const char *FilePath)
     return 0;
 }
 
-void ffplayer::decoder::close()
+void ff_player::decoder::close()
 {
     if(pAVFormatContext != nullptr)
     {
@@ -145,8 +144,7 @@ void ffplayer::decoder::close()
     }
 }
 
-// 读取音视频包进行解码
-int32_t ffplayer::decoder::readFrame()
+int32_t ff_player::decoder::read_frame()
 {
     int res;
     while(true)
@@ -173,7 +171,7 @@ int32_t ffplayer::decoder::readFrame()
             res = decode_packet_to_frame(pVideoDecodeContext, pAVPacket, &pVideoFrame);
             if(res == 0 && pVideoFrame != nullptr)
             {
-                std::clog << '1' << std::endl;
+                // std::clog << '1' << std::endl;
             }
         }
         else if(pAVPacket->stream_index == AudioStreamIndex)
@@ -182,7 +180,7 @@ int32_t ffplayer::decoder::readFrame()
             res = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame);
             if(res == 0 && pAudioFrame != nullptr)
             {
-                std::clog << '2' << std::endl;
+                // std::clog << '2' << std::endl;
             }
         }
 
@@ -191,22 +189,7 @@ int32_t ffplayer::decoder::readFrame()
     return 0;
 }
 
-/* 解码器核心方法 */
-/*
-    avcodec_send_packet() 和 avcodec_receive_frame() 通常是同时使用的
-    先调用 avcodec_send_packet() 送入要解码的数据包
-    然后调用 avcodec_receive_frame()获取解码后的音视频数据
-        这两个函数是异步的，内部有缓冲区
-        因此可能出现缓冲区满或者缓冲区无内容的情况
-
-        通常解码开始，通过avcodec_send_packet()送入几十个数据包
-        对应的avcodec_receive_frame()都没有音视频帧输出
-        等送入的数据包足够多后，avcodec_receive_frame()才开始输出前面一开始送入进行解码的音视频帧
-        最后几十没有数据包送入了，也要调用avcodec_send_packet()送入空数据包，以驱动解码模块继续解码缓冲区中的数据
-        此时avcodec_receive_frame()还是会有音视频帧输出
-        直到返回AVERROR_EOF才表示所有数据包解码完成。
-*/
-int32_t ffplayer::decoder::decode_packet_to_frame(AVCodecContext *pDecoderContext, AVPacket *pInPacket, AVFrame **ppOutFrame)
+int32_t ff_player::decoder::decode_packet_to_frame(AVCodecContext *pDecoderContext, AVPacket *pInPacket, AVFrame **ppOutFrame)
 {
     AVFrame *pOutFrame  = nullptr;
     int     res;

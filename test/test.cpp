@@ -23,6 +23,6 @@ void test1::test()
 void test2::test()
 {
     decoder->open(file_name);
-    decoder->readFrame();
+    decoder->read_frame();
     decoder->close();
 }

@@ -1,3 +1,5 @@
+// 测试类文件
+
 #ifndef FFPLAYER_TEST_H
 #define FFPLAYER_TEST_H
 
@@ -15,6 +17,7 @@ extern "C"
 }
 #endif
 
+// 简单测试，输出测试视频的信息
 class test1
 {
 private:
@@ -32,14 +35,15 @@ public:
     void test();
 }; // class test1
 
+// 简单测试ff_player::decoder的功能
 class test2
 {
 private:
-    ffplayer::decoder* decoder;
+    ff_player::decoder* decoder;
     const char* file_name;
 
 public:
-    test2() { decoder = new ffplayer::decoder(); file_name = "D:/Project/C/ffplayer/test/videos/test_mp4.mp4"; }
+    test2() { decoder = new ff_player::decoder(); file_name = "D:/Project/C/ffplayer/test/videos/test_mp4.mp4"; }
     ~test2() { delete decoder; file_name = nullptr; }
 
 public:
