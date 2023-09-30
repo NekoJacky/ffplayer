@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22)
 project(ffplayer)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -18,9 +18,9 @@ include_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/
 link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib)
 
 add_subdirectory(src)
-add_subdirectory(ffmpeg)
+add_subdirectory(test)
 
-add_executable(ffplayer main.cpp test/test.cpp test/test.h)
+add_executable(ffplayer main.cpp)
 
 target_link_libraries(ffplayer
         Qt::Core
@@ -36,7 +36,7 @@ target_link_libraries(ffplayer
         swscale
 
         src
-        ff_src
+        test
 )
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)

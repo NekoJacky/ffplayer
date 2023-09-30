@@ -20,11 +20,9 @@ void test1::test()
     avformat_close_input(&fmt_cxt);
 }
 
-/*
 void test2::test()
 {
     decoder->open(file_name);
     decoder->readFrame();
     decoder->close();
 }
-*/

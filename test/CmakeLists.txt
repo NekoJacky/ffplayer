@@ -6,11 +6,11 @@ find_package(Qt6 COMPONENTS
 include_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/include)
 link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib)
 
-aux_source_directory(. SRC)
+aux_source_directory(. TEST)
 
-add_library(src ${SRC})
+add_library(test ${TEST})
 
-target_link_libraries(src
+target_link_libraries(test
         Qt6::Core
         avdevice
         avfilter
@@ -20,4 +20,6 @@ target_link_libraries(src
         swresample
         postproc
         swscale
+
+        src
 )

@@ -32,7 +32,6 @@ public:
     void test();
 }; // class test1
 
-/*
 class test2
 {
 private:
@@ -46,6 +45,5 @@ public:
 public:
     void test();
 }; // class test2
-*/
 
 #endif

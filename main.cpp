@@ -17,13 +17,13 @@ extern "C"
 
 int main(int argc, char *argv[])
 {
-    auto* t1 = new test1();
+    /*auto* t1 = new test1();
     t1->test();
-    delete t1;
+    delete t1;*/
 
-    /*auto* t2 = new test2();
+    auto* t2 = new test2();
     t2->test();
-    delete t2;*/
+    delete t2;
 
     return 0;
 }
