@@ -20,8 +20,7 @@ link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib
 add_subdirectory(src)
 add_subdirectory(ffmpeg)
 
-add_executable(ffplayer main.cpp
-)
+add_executable(ffplayer main.cpp test/test.cpp test/test.h)
 
 target_link_libraries(ffplayer
         Qt::Core
