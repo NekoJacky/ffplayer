@@ -3,7 +3,7 @@
 #ifndef FFPLAYER_TEST_H
 #define FFPLAYER_TEST_H
 
-#include "../src/decoder.h"
+#include "../src/t_decoder.h"
 
 #include <QString>
 
@@ -39,11 +39,11 @@ public:
 class test2
 {
 private:
-    ff_player::decoder* decoder;
+    ff_player::t_decoder* decoder;
     const char* file_name;
 
 public:
-    test2() { decoder = new ff_player::decoder(); file_name = "D:/Project/C/ffplayer/test/videos/test_mp4.mp4"; }
+    test2() { decoder = new ff_player::t_decoder(); file_name = "D:/Project/C/ffplayer/test/videos/test_mp4.mp4"; }
     ~test2() { delete decoder; file_name = nullptr; }
 
 public:

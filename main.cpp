@@ -1,6 +1,7 @@
 // cpp
 
 // Qt
+#include <QApplication>
 
 // ffmpeg
 #ifdef __cplusplus
@@ -14,16 +15,15 @@ extern "C"
 #endif
 
 #include "test/test.h"
+#include "src/player_widget.h"
 
 int main(int argc, char *argv[])
 {
-    /*auto* t1 = new test1();
-    t1->test();
-    delete t1;*/
+    QApplication a(argc, argv);
 
-    auto* t2 = new test2();
-    t2->test();
-    delete t2;
+    QWidget w;
+    w.setWindowTitle("ffplayer");
+    w.show();
 
-    return 0;
+    return QApplication::exec();
 }
