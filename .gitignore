@@ -8,6 +8,4 @@
 *.mp4
 
 #files
-encoder.h
-encoder.cpp
 temp.txt

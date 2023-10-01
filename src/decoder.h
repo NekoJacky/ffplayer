@@ -4,7 +4,13 @@
 #ifndef FF_PLAYER_DECODER_H_
 #define FF_PLAYER_DECODER_H_
 
-#include <iostream>
+#include <filesystem>
+#include <string>
+
+#include <QDebug>
+#include <QFile>
+#include <QString>
+#include <QTextStream>
 
 #ifdef __cplusplus
 extern "C"
@@ -12,6 +18,8 @@ extern "C"
 #endif
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 #ifdef __cplusplus
 }
 #endif
@@ -40,6 +48,70 @@ namespace ff_player
 
 class decoder
 {
+public:
+    struct frame_saver
+    {
+        struct SwsContext* ImgCtx;
+        AVFrame* RgbFrame;
+        AVFrame* YuvFrame;
+
+        frame_saver() = default;
+        explicit frame_saver(AVCodecContext* pVideoDecoderContext)
+        {
+            RgbFrame = av_frame_alloc();
+            YuvFrame = av_frame_alloc();
+
+            /* 设置数据转换参数
+             * 前三个参数为源地址长宽以及数据格式
+             * 然后的三个参数为目的地址长宽以及数据格式
+             * 算法类型  AV_PIX_FMT_YUVJ420P   AV_PIX_FMT_BGR24
+             * */
+            ImgCtx = sws_getContext(pVideoDecoderContext->width, pVideoDecoderContext->height,
+                                    pVideoDecoderContext->pix_fmt, pVideoDecoderContext->width,
+                                    pVideoDecoderContext->height, AV_PIX_FMT_RGB32, SWS_BICUBIC,
+                                    nullptr, nullptr, nullptr);
+
+            // 分配一帧图像的数据大小
+            int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB32, pVideoDecoderContext->width,
+                                                    pVideoDecoderContext->height, 1);
+            auto *out_buffer = (unsigned char *)av_malloc(numBytes * sizeof(unsigned char));
+
+            // 将rgb_frame中的数据关联到pVideoDecoderContext，数据会同步改变
+            av_image_fill_arrays(RgbFrame->data, RgbFrame->linesize, out_buffer, AV_PIX_FMT_RGB32,
+                                 pVideoDecoderContext->width, pVideoDecoderContext->height, 1);
+        }
+
+        ~frame_saver()
+        {
+            av_frame_free(&RgbFrame);
+            av_frame_free(&YuvFrame);
+        }
+
+        static frame_saver get_frame_saver(AVCodecContext* pVideoDecoderContext);
+
+        /**
+         * @brief 保存视频帧到file_path
+         * @param pVideoFrame   要保存的视频帧
+         * @param width         视频帧宽度
+         * @param height        视频帧高度
+         * @param frame         视频帧编号
+         * @param file_path     保存路径
+         * */
+        static void save_video_frame_(AVFrame* pVideoFrame, int width, int height, int frame, const char* file_path);
+
+        /**
+         * @brief 保存视频帧到默认路径
+         * 调用save_video_frame(AVFrame* pVideoFrame, int width, int height, int frame, const char* file_path)
+         * */
+        static void save_video_frame_test(AVFrame* pVideoFrame, int width, int height, int frame);
+
+        /**
+         * @brief 保存一帧图像
+         * @param pVideoDecoderContext  视频帧的相关数据
+         * @param i                     视频帧个数
+         * */
+        void save_video_frame(AVCodecContext* pVideoDecoderContext, int32_t i) const;
+    };
 
 private:
     AVFormatContext *pAVFormatContext;
@@ -47,6 +119,7 @@ private:
     uint32_t        VideoStreamIndex;
     AVCodecContext  *pAudioDecodeContext;
     uint32_t        AudioStreamIndex;
+    frame_saver     saver{};
 
 public:
     decoder()
@@ -62,8 +135,6 @@ public:
     /**
      * @brief 打开并解析媒体文件
      * 注意，open()函数只用来解封装，解码媒体文件请使用read_frame()
-     * @see read_frame()
-     * @see decode_packet_to_frame()
      * @param FilePath  需要解析的文件的路径
      * @retval 0    成功打开并解析文件
      * @retval -1   出现错误，具体错误查看控制台中输出的信息
@@ -77,7 +148,6 @@ public:
 
     /**
      * @brief 读取音视频包，调用decode_packet_to_frame进行解码
-     * @see decode_packet_to_frame()
      * @retval 0 读取结束
      * */
     int32_t read_frame();
@@ -96,9 +166,10 @@ public:
      *      最后几十没有数据包送入了，也要调用avcodec_send_packet()送入空数据包，以驱动解码模块继续解码缓冲区中的数据
      *      此时avcodec_receive_frame()还是会有音视频帧输出
      *      直到返回AVERROR_EOF才表示所有数据包解码完成。
-     * @param pAVCodecContext   输入数据包的相关解码数据
-     * @param pAVPacket         需要解码的数据包
-     * @param pAVFrame          用于接收解码后数据
+     * @param pDecoderContext   输入数据包的相关解码数据
+     * @param pInPacket         需要解码的数据包
+     * @param ppOutFrame        用于接收解码后数据
+     * @param i                 视频帧数目
      * @retval 0                成功解码
      * @retval AVERROR(EAGAIN)  输入端：缓冲区已满，无法接收新的数据
      * @retval AVERROR(EAGAIN)  输出端：输出不可用，需要更多输入才可以输出
@@ -106,7 +177,7 @@ public:
      * @retval AVERROR_EOF      输出端：到达输出文件末尾，所有数据包解码完成
      * @retval -1               无法获得输出流
      * */
-    static int32_t decode_packet_to_frame(AVCodecContext *pAVCodecContext, AVPacket *pAVPacket, AVFrame **pAVFrame);
+    int32_t decode_packet_to_frame(AVCodecContext *pDecoderContext, AVPacket *pInPacket, AVFrame **ppOutFrame, int i);
 
 }; // class decoder
 
