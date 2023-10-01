@@ -98,7 +98,6 @@ int32_t ff_player::decoder::open(const char *FilePath)
         close();
         return -1;
     }
-    saver = (frame_saver::get_frame_saver(pVideoDecodeContext));
 
     pAudioDecodeContext = avcodec_alloc_context3(pAudioDecoder);
     if(pAudioDecodeContext == nullptr)
@@ -170,7 +169,7 @@ int32_t ff_player::decoder::read_frame()
         if(pAVPacket->stream_index == VideoStreamIndex)
         {
             AVFrame *pVideoFrame = nullptr;
-            res = decode_packet_to_frame(pVideoDecodeContext, pAVPacket, &pVideoFrame, i);
+            res = decode_packet_to_frame(pVideoDecodeContext, pAVPacket, &pVideoFrame);
             if(res == 0 && pVideoFrame != nullptr)
             {
                 i++;
@@ -180,7 +179,7 @@ int32_t ff_player::decoder::read_frame()
         else if(pAVPacket->stream_index == AudioStreamIndex)
         {
             AVFrame *pAudioFrame = nullptr;
-            res = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame, -1);
+            res = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame);
             if(res == 0 && pAudioFrame != nullptr)
             {
                 // std::clog << '2' << std::endl;
@@ -194,7 +193,7 @@ int32_t ff_player::decoder::read_frame()
 }
 
 int32_t ff_player::decoder::decode_packet_to_frame(AVCodecContext *pDecoderContext,
-                                                   AVPacket *pInPacket, AVFrame **ppOutFrame, int i)
+                                                   AVPacket *pInPacket, AVFrame **ppOutFrame)
 {
     AVFrame *pOutFrame  = nullptr;
     int     res;
@@ -239,52 +238,6 @@ int32_t ff_player::decoder::decode_packet_to_frame(AVCodecContext *pDecoderConte
         return res;
     }
 
-    if(pInPacket->stream_index == VideoStreamIndex)
-    {
-        saver.save_video_frame(pDecoderContext, i);
-    }
-
     (*ppOutFrame) = pOutFrame;
     return 0;
-}
-
-ff_player::decoder::frame_saver ff_player::decoder::frame_saver::get_frame_saver(AVCodecContext *pVideoDecoderContext)
-{
-    frame_saver saver(pVideoDecoderContext);
-    return saver;
-}
-
-
-void ff_player::decoder::frame_saver::save_video_frame_(AVFrame *pVideoFrame, int width, int height, int frame,
-                                                        const char *file_path)
-{
-    std::string name_ = file_path;
-    name_ += std::to_string(frame);
-    name_ += ".ppm";
-    std::filesystem::path name(name_);
-
-    auto file = new QFile(name);
-    if (!file->open(QIODevice::WriteOnly | QIODevice::Text))
-        return;
-    QTextStream file_out(reinterpret_cast<FILE *>(&file));
-
-    file_out << "P6\n" << width << height << "\n255\n";
-    for(int i = 0; i < height; i++)
-        for(int j = 0; j < 3; j++)
-            file_out << pVideoFrame->data[0] + i * pVideoFrame->linesize[0] + j;
-
-    delete file;
-}
-
-void ff_player::decoder::frame_saver::save_video_frame_test(AVFrame *pVideoFrame, int width, int height, int frame)
-{
-    const char* file_path = R"(D:\Project\C\ffplayer\test\frames)";
-    save_video_frame_(pVideoFrame, width, height, frame, file_path);
-}
-
-void ff_player::decoder::frame_saver::save_video_frame(AVCodecContext* pVideoDecoderContext, int32_t i) const
-{
-    sws_scale(ImgCtx, YuvFrame->data, YuvFrame->linesize, 0,
-              pVideoDecoderContext->height, RgbFrame->data, RgbFrame->linesize);
-    save_video_frame_test(RgbFrame, pVideoDecoderContext->width, pVideoDecoderContext->height, i);
 }
