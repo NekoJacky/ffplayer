@@ -1,6 +1,7 @@
 /**
  * @brief decoder，用于解码、格式转换
  * 过程比较耗时，放在独立线程中运行
+ * 使用到的api用法可以看t_decoder.h和t_decoder.cpp
  * */
 #ifndef DECODER_H
 #define DECODER_H
@@ -30,16 +31,18 @@ extern "C"
 class decoder: public QThread
 {
 private:
-    bool                file_is_open;
-    AVFormatContext     *fmt_cxt;
+    AVFormatContext     *FmtCtx;
     AVCodec             *VideoCodec;
     AVCodecContext      *VideoCodecContext;
-    AVPacket            *pkt;
+    AVCodec             *AudioCodec;
+    AVCodecContext      *AudioCodecContext;
+    AVPacket            *Pkt;
     AVFrame             *RgbFrame;
     AVFrame             *YuvFrame;
-    struct SwsContext   *img_cxt;
-    char                *out_buffer;
+    struct SwsContext   *ImgCtx;
+    char                *OutBuffer;
     int32_t             VideoStreamIndex;
+    int32_t             AudioStreamIndex;
     int32_t             NumBytes;
     QString             Url;
 

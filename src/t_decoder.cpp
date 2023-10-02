@@ -6,7 +6,7 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
     AVCodec *pAudioDecoder = nullptr;
     int     res;
     
-    res = avformat_open_input(&pAVFormatContext, FilePath, nullptr, nullptr);
+    avformat_open_input(&pAVFormatContext, FilePath, nullptr, nullptr);
     if(pAVFormatContext == nullptr)
     {
         qDebug() << "Can't Open the File";
