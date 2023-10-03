@@ -8,8 +8,7 @@ link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib
 
 aux_source_directory(. SRC)
 
-add_library(src ${SRC}
-        player_widget.cpp)
+add_library(src ${SRC})
 
 target_link_libraries(src
         Qt6::Core

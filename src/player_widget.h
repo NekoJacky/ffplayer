@@ -2,8 +2,9 @@
 #define PLAYER_WIDGET_H
 
 #include <QWidget>
+#include <QPainter>
 
-#include "decoder.h"
+#include "player.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -33,12 +34,12 @@ class player_widget : public QWidget
     Q_OBJECT
 
 private:
-    decoder *decoder;
-    QImage image;
+    player *Player;
+    QImage Image;
 
 public:
     explicit player_widget(QWidget *parent = nullptr);
-    ~player_widget();
+    ~player_widget() override;
 
 public:
     void setUrl(QString Url);
@@ -46,10 +47,10 @@ public:
     void stop();
 
 protected:
-    void paintEvent(QPaintEvent *Event);
+    void paintEvent(QPaintEvent *Event) override;
 
 private slots:
-    void receiveImage(QImage &Image);
+    void receiveImage(QImage &Img);
 
 private:
     Ui::player_widget *ui;

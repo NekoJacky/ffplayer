@@ -7,6 +7,7 @@
 #define DECODER_H
 
 #include <QThread>
+#include <QImage>
 #include <QDebug>
 
 #ifdef __cplusplus
@@ -28,7 +29,7 @@ extern "C"
 }
 #endif
 
-class decoder: public QThread
+class player: public QThread
 {
 private:
     AVFormatContext     *FmtCtx;
@@ -40,20 +41,21 @@ private:
     AVFrame             *RgbFrame;
     AVFrame             *YuvFrame;
     struct SwsContext   *ImgCtx;
-    char                *OutBuffer;
+    const uchar         *OutBuffer;
     int32_t             VideoStreamIndex;
     int32_t             AudioStreamIndex;
     int32_t             NumBytes;
     QString             Url;
 
 public:
-    decoder();
-    ~decoder() override;
+    player();
+    ~player() override;
 
 protected:
     void run() override;
 signals:
-    void sendImage(QImage);
+    // 信号只能声明不能定义
+    void sendQImage(QImage);
 public:
     void setUrl(QString url);
     bool openFile();

@@ -1,6 +1,6 @@
-#include "decoder.h"
+#include "player.h"
 
-decoder::decoder()
+player::player()
 {
     FmtCtx = avformat_alloc_context();
     VideoCodec = nullptr;
@@ -18,7 +18,7 @@ decoder::decoder()
     Url = "";
 }
 
-decoder::~decoder()
+player::~player()
 {
     if(!FmtCtx) avformat_close_input(&FmtCtx);
     if(!VideoCodecContext) avcodec_close(VideoCodecContext);
@@ -28,12 +28,12 @@ decoder::~decoder()
     if(!YuvFrame) av_frame_free(&YuvFrame);
 }
 
-void decoder::setUrl(QString url)
+void player::setUrl(QString url)
 {
     Url = std::move(url);
 }
 
-bool decoder::openFile()
+bool player::openFile()
 {
     if(Url.isEmpty())
     {
@@ -133,7 +133,7 @@ bool decoder::openFile()
                             nullptr, nullptr, nullptr);
     NumBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, VideoCodecContext->width,
                                         VideoCodecContext->height, 1);
-    OutBuffer = (char*)(av_malloc(NumBytes*sizeof(unsigned char)));
+    OutBuffer = (const uchar*)(av_malloc(NumBytes*sizeof(unsigned char)));
     int res = av_image_fill_arrays(RgbFrame->data, RgbFrame->linesize, (const uint8_t*)OutBuffer,
                                    AV_PIX_FMT_RGB24, VideoCodecContext->width,
                                    VideoCodecContext->height, 1);
@@ -146,11 +146,55 @@ bool decoder::openFile()
     return true;
 }
 
-void decoder::run()
+void player::run()
 {
     if(!openFile())
     {
         qDebug() << "<Decoder><Run> Can't open file";
         return ;
     }
+    int res;
+    while(true)
+    {
+        res = av_read_frame(FmtCtx, Pkt);
+        if(res == AVERROR_EOF)
+        {
+            qDebug() << "<ReadFrame> Reached the file end";
+            break;
+        }
+        else if(res < 0)
+        {
+            qDebug() << "<ReadFrame> Can't read frame, code:" << res;
+            break;
+        }
+        if(Pkt->stream_index == VideoStreamIndex)
+        {
+            res = avcodec_send_packet(VideoCodecContext, Pkt);
+            if(res == AVERROR(EAGAIN))
+            {
+                qDebug() << "Buffer Full";
+                continue;
+            }
+            else if(res == AVERROR(EOF))
+            {
+                qDebug() << "Input File End";
+                continue;
+            }
+            else if(res < 0)
+            {
+                qDebug() << "Fail to Send Packet to AVCodec";
+                return ;
+            }
+            sws_scale(ImgCtx, YuvFrame->data, YuvFrame->linesize,
+                      0, VideoCodecContext->height, RgbFrame->data,
+                      RgbFrame->linesize);
+            QImage img(OutBuffer, VideoCodecContext->width,
+                       VideoCodecContext->height, QImage::Format_RGB32);
+            emit sendQImage(img);
+            QThread::msleep(30);
+        }
+        // 播放声音的部分以后再写
+        av_packet_unref(Pkt);
+    }
+    qDebug() << "Video end";
 }
