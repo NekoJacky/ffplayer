@@ -25,11 +25,7 @@ extern "C"
 }
 #endif
 
-namespace Ui {
-class player_widget;
-}
-
-class player_widget : public QWidget
+class player_w : public QWidget
 {
     Q_OBJECT
 
@@ -38,8 +34,8 @@ private:
     QImage Image;
 
 public:
-    explicit player_widget(QWidget *parent = nullptr);
-    ~player_widget() override;
+    explicit player_w(QWidget *parent = nullptr);
+    ~player_w() override;
 
 public:
     void setUrl(QString Url);
@@ -50,10 +46,7 @@ protected:
     void paintEvent(QPaintEvent *Event) override;
 
 private slots:
-    void receiveImage(QImage &Img);
-
-private:
-    Ui::player_widget *ui;
+    void receiveImage(const QImage &Img);
 };
 
 #endif // PLAYER_WIDGET_H

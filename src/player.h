@@ -31,6 +31,7 @@ extern "C"
 
 class player: public QThread
 {
+    Q_OBJECT
 private:
     AVFormatContext     *FmtCtx;
     AVCodec             *VideoCodec;
@@ -54,7 +55,6 @@ public:
 protected:
     void run() override;
 signals:
-    // 信号只能声明不能定义
     void sendQImage(QImage);
 public:
     void setUrl(QString url);

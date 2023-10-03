@@ -4,6 +4,7 @@
 #define FFPLAYER_TEST_H
 
 #include "../src/t_decoder.h"
+#include "../widget.h"
 
 #include <QString>
 

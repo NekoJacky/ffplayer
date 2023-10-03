@@ -15,13 +15,13 @@ extern "C"
 #endif
 
 #include "test/test.h"
-#include "src/player_widget.h"
+#include "widget.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QWidget w;
+    Widget w;
     w.setWindowTitle("ffplayer");
     w.show();
 

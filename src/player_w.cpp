@@ -1,37 +1,33 @@
-#include "player_widget.h"
+#include "player_w.h"
 
 #include <utility>
-#include "ui_player_widget.h"
 
-player_widget::player_widget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::player_widget)
+player_w::player_w(QWidget *parent) :
+    QWidget(parent)
 {
-    ui->setupUi(this);
     Player = new player();
-    connect(Player, SIGNAL(sendQImage), this, SLOT(receiveImage));
+    connect(Player, SIGNAL(sendQImage(QImage)), this, SLOT(receiveImage(QImage)));
     connect(Player, &player::finished, Player, &player::deleteLater);
 }
 
-player_widget::~player_widget()
+player_w::~player_w()
 {
     if(Player->isRunning())
         stop();
-    delete ui;
 }
 
-void player_widget::setUrl(QString Url)
+void player_w::setUrl(QString Url)
 {
     Player->setUrl(std::move(Url));
 }
 
-void player_widget::play()
+void player_w::play()
 {
     stop();
     Player->start();
 }
 
-void player_widget::stop()
+void player_w::stop()
 {
     if(Player->isRunning())
     {
@@ -42,13 +38,13 @@ void player_widget::stop()
     Image.fill(Qt::black);
 }
 
-void player_widget::paintEvent(QPaintEvent *Event)
+void player_w::paintEvent(QPaintEvent *Event)
 {
     QPainter painter(this);
     painter.drawImage(0, 0, Image);
 }
 
-void player_widget::receiveImage(QImage &Img)
+void player_w::receiveImage(const QImage &Img)
 {
     Image = Img.scaled(this->size());
     update();
