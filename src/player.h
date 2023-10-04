@@ -47,6 +47,7 @@ private:
     int32_t             AudioStreamIndex;
     int32_t             NumBytes;
     QString             Url;
+    bool                StopFlag;
 
 public:
     player();
@@ -58,6 +59,7 @@ signals:
     void sendQImage(QImage);
 public:
     void setUrl(QString url);
+    void setFlag(bool f);
     bool openFile();
 };
 

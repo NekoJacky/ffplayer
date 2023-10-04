@@ -10,6 +10,7 @@ Widget::Widget(QWidget *parent) :
     ui->setupUi(this);
     // test
     setUrl(R"(D:\Project\C\ffplayer\test\videos\test_mp4.mp4)");
+
     connect(ui->PlayBtn, &QPushButton::clicked, this, &Widget::clickedPlayBtn);
     connect(ui->StopBtn, &QPushButton::clicked, this, &Widget::clickedStopBtn);
 }

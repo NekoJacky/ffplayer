@@ -45,6 +45,10 @@ public:
 protected:
     void paintEvent(QPaintEvent *Event) override;
 
+signals:
+    void stopPlay();
+    void startPlay();
+
 private slots:
     void receiveImage(const QImage &Img);
 };

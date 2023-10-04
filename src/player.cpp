@@ -16,6 +16,7 @@ player::player()
     AudioStreamIndex = -1;
     NumBytes = -1;
     Url = "";
+    StopFlag = true;
 }
 
 player::~player()
@@ -26,11 +27,17 @@ player::~player()
     if(!Pkt) av_packet_free(&Pkt);
     if(!RgbFrame) av_frame_free(&RgbFrame);
     if(!YuvFrame) av_frame_free(&YuvFrame);
+    if(!ImgCtx) sws_freeContext(ImgCtx);
 }
 
 void player::setUrl(QString url)
 {
     Url = std::move(url);
+}
+
+void player::setFlag(bool f)
+{
+    StopFlag = f;
 }
 
 bool player::openFile()
@@ -129,13 +136,13 @@ bool player::openFile()
                             VideoCodecContext->pix_fmt,
                             VideoCodecContext->width,
                             VideoCodecContext->height,
-                            AV_PIX_FMT_RGB24, SWS_BICUBIC,
+                            AV_PIX_FMT_RGB32, SWS_BICUBIC,
                             nullptr, nullptr, nullptr);
-    NumBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, VideoCodecContext->width,
+    NumBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB32, VideoCodecContext->width,
                                         VideoCodecContext->height, 1);
     OutBuffer = (const uchar*)(av_malloc(NumBytes*sizeof(unsigned char)));
     int res = av_image_fill_arrays(RgbFrame->data, RgbFrame->linesize, (const uint8_t*)OutBuffer,
-                                   AV_PIX_FMT_RGB24, VideoCodecContext->width,
+                                   AV_PIX_FMT_RGB32, VideoCodecContext->width,
                                    VideoCodecContext->height, 1);
     if(res < 0)
     {
@@ -154,7 +161,7 @@ void player::run()
         return ;
     }
     int res;
-    while(true)
+    while(StopFlag)
     {
         res = av_read_frame(FmtCtx, Pkt);
         if(res == AVERROR_EOF)
@@ -165,24 +172,38 @@ void player::run()
         else if(res < 0)
         {
             qDebug() << "<ReadFrame> Can't read frame, code:" << res;
-            break;
+            return ;
         }
         if(Pkt->stream_index == VideoStreamIndex)
         {
             res = avcodec_send_packet(VideoCodecContext, Pkt);
             if(res == AVERROR(EAGAIN))
             {
-                qDebug() << "Buffer Full";
-                continue;
+                qDebug() << "<SendPkt> Buffer Full";
             }
             else if(res == AVERROR(EOF))
             {
-                qDebug() << "Input File End";
-                continue;
+                qDebug() << "<SendPkt> Input File End";
             }
             else if(res < 0)
             {
-                qDebug() << "Fail to Send Packet to AVCodec";
+                qDebug() << "<SendPkt> Fail to Send Packet to AVCodec";
+                return ;
+            }
+            res = avcodec_receive_frame(VideoCodecContext, YuvFrame);
+            if(res == AVERROR(EAGAIN))
+            {
+                qDebug() << "<ReceivePkt> No Output Data";
+                continue;
+            }
+            else if(res == AVERROR_EOF)
+            {
+                qDebug() << "<ReceivePkt> Output File End";
+                break;
+            }
+            else if(res < 0)
+            {
+                qDebug() << "<ReceivePkt> Fail to Receive Frame from AVCodec";
                 return ;
             }
             sws_scale(ImgCtx, YuvFrame->data, YuvFrame->linesize,
@@ -196,5 +217,5 @@ void player::run()
         // 播放声音的部分以后再写
         av_packet_unref(Pkt);
     }
-    qDebug() << "Video end";
+    qDebug() << "<Player::Run> Video end";
 }
