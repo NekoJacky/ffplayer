@@ -2,6 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QFileDialog>
 
 namespace Ui {
 class Widget;
@@ -10,6 +11,9 @@ class Widget;
 class Widget : public QWidget
 {
     Q_OBJECT
+
+private:
+    QString FilePath;
 
 public:
     explicit Widget(QWidget *parent = nullptr);

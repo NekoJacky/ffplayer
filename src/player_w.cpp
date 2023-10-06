@@ -6,6 +6,8 @@ player_w::player_w(QWidget *parent) :
     QWidget(parent)
 {
     Player = new player();
+    QScreen* screen = QGuiApplication::primaryScreen();
+    rect = screen->geometry();
     connect(Player, SIGNAL(sendQImage(QImage)), this, SLOT(receiveImage(QImage)));
     connect(Player, &player::finished, Player, &player::deleteLater);
     connect(this, &player_w::stopPlay, [this](){ Player->setFlag(false); });
@@ -51,6 +53,10 @@ void player_w::paintEvent(QPaintEvent *Event)
 void player_w::receiveImage(const QImage &Img)
 {
     Image = Img.scaled(this->size());
-    // paintEvent()
+    QSize size = Img.size();
+    if(size.height() < rect.height() || size.width() < rect.width())
+        this->setFixedSize(size);
+    else
+        this->setFixedSize(rect.width(), rect.height());
     update();
 }

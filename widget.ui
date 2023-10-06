@@ -61,6 +61,13 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
+          <widget class="QPushButton" name="OpenFileBtn">
+           <property name="text">
+            <string>Open File</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="PlayBtn">
            <property name="text">
             <string>Play</string>

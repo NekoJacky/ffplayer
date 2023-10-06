@@ -157,7 +157,7 @@ void player::run()
 {
     if(!openFile())
     {
-        qDebug() << "<Decoder><Run> Can't open file";
+        qDebug() << "<OpenFile><Run> Can't open file";
         return ;
     }
     int res;

@@ -3,6 +3,9 @@
 
 #include <QWidget>
 #include <QPainter>
+#include <QGuiApplication>
+#include <QScreen>
+#include <QRect>
 
 #include "player.h"
 
@@ -30,8 +33,9 @@ class player_w : public QWidget
     Q_OBJECT
 
 private:
-    player *Player;
-    QImage Image;
+    player  *Player;
+    QImage  Image;
+    QRect   rect;
 
 public:
     explicit player_w(QWidget *parent = nullptr);
