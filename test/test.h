@@ -34,7 +34,7 @@ public:
 
 public:
     void test();
-}; // class test1
+};
 
 // 简单测试ff_player::decoder的功能
 class test2
@@ -49,6 +49,16 @@ public:
 
 public:
     void test();
-}; // class test2
+};
+
+class test3
+{
+private:
+
+public:
+
+public:
+
+};
 
 #endif

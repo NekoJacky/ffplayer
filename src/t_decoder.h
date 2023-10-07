@@ -6,13 +6,13 @@
 #ifndef FF_PLAYER_DECODER_H_
 #define FF_PLAYER_DECODER_H_
 
+#include <iostream>
 #include <filesystem>
 #include <string>
 
 #include <QDebug>
-#include <QFile>
 #include <QString>
-#include <QTextStream>
+#include <fstream>
 
 #ifdef __cplusplus
 extern "C"
@@ -57,6 +57,11 @@ private:
     uint32_t        VideoStreamIndex;
     AVCodecContext  *pAudioDecodeContext;
     uint32_t        AudioStreamIndex;
+    /* mp4->yuv
+    FILE            *File;
+    int             w;
+    int             h;
+     */
 
 public:
     t_decoder()
@@ -66,6 +71,11 @@ public:
         pAudioDecodeContext = nullptr;
         VideoStreamIndex    = -1;
         AudioStreamIndex    = -1;
+        /* mp4->yuv
+        File                = fopen(R"(D:\Project\C\ffplayer\test\videos\test_yuv.yuv)", "w+b");
+        w                   = 0;
+        h                   = 0;
+         */
     }
 
 public:

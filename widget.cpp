@@ -8,7 +8,6 @@ Widget::Widget(QWidget *parent) :
     ui(new Ui::Widget)
 {
     ui->setupUi(this);
-    // test
     setUrl("");
 
     connect(ui->PlayBtn, &QPushButton::clicked, this, &Widget::clickedPlayBtn);

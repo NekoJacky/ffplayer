@@ -6,6 +6,7 @@
 
 # files endswith
 *.mp4
+*.yuv
 
 #files
 temp.txt

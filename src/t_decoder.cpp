@@ -168,11 +168,22 @@ int32_t ff_player::t_decoder::read_frame()
         if(pAVPacket->stream_index == VideoStreamIndex)
         {
             AVFrame *pVideoFrame = nullptr;
+            /* mp4->yuv
+            w = pVideoDecodeContext->width;
+            h = pVideoDecodeContext->height;
+             */
             res = decode_packet_to_frame(pVideoDecodeContext, pAVPacket, &pVideoFrame);
             if(res == 0 && pVideoFrame != nullptr)
             {
                 i++;
-                // std::clog << '1' << std::endl;
+                // std::clog << i << std::endl;
+                /* mp4->yuv
+                fwrite(pVideoFrame->data[0], 1, w*h, File);
+                fwrite(pVideoFrame->data[1], 1, (w*h)/4, File);
+                fwrite(pVideoFrame->data[2], 1, (w*h)/4, File);
+
+                fflush(File);
+                 */
             }
         }
         else if(pAVPacket->stream_index == AudioStreamIndex)
@@ -181,7 +192,7 @@ int32_t ff_player::t_decoder::read_frame()
             res = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame);
             if(res == 0 && pAudioFrame != nullptr)
             {
-                // std::clog << '2' << std::endl;
+                // std::clog << i << std::endl;
             }
         }
 

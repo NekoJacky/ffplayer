@@ -9,6 +9,7 @@
 #include <QThread>
 #include <QImage>
 #include <QDebug>
+#include <QFile>
 
 #ifdef __cplusplus
 extern "C"
