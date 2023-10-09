@@ -131,6 +131,7 @@ bool player::openFile()
         return false;
     }
 
+    // 创建格式转换器，指定缩放算法，不添加滤镜
     ImgCtx = sws_getContext(VideoCodecContext->width,
                             VideoCodecContext->height,
                             VideoCodecContext->pix_fmt,
@@ -206,6 +207,7 @@ void player::run()
                 qDebug() << "<ReceivePkt> Fail to Receive Frame from AVCodec";
                 return ;
             }
+            // 进行格式转换
             sws_scale(ImgCtx, YuvFrame->data, YuvFrame->linesize,
                       0, VideoCodecContext->height, RgbFrame->data,
                       RgbFrame->linesize);

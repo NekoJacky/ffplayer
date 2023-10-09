@@ -1,4 +1,4 @@
-/* ff_player::decoder
+/* ff_player::t_decoder
  * 一个简单的解码器
  * 简单学习一下解码操作
  * */
@@ -81,7 +81,7 @@ public:
 public:
     /**
      * @brief 打开并解析媒体文件
-     * 注意，open()函数只用来解封装，解码媒体文件请使用read_frame()
+     * 注意，open()函数只用来解封装，解码媒体文件使用read_frame()
      * @param FilePath  需要解析的文件的路径
      * @retval 0    成功打开并解析文件
      * @retval -1   出现错误，具体错误查看控制台中输出的信息

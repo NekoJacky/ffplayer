@@ -36,6 +36,9 @@ private:
     player  *Player;
     QImage  Image;
     QRect   rect;
+    int32_t h;
+    int32_t w;
+    bool    flag;
 
 public:
     explicit player_w(QWidget *parent = nullptr);
