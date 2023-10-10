@@ -4,7 +4,7 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
 {
     AVCodec *pVideoDecoder = nullptr;
     AVCodec *pAudioDecoder = nullptr;
-    int     res;
+    int     ret;
     
     avformat_open_input(&pAVFormatContext, FilePath, nullptr, nullptr);
     if(pAVFormatContext == nullptr)
@@ -14,8 +14,8 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
     }
 
     // 读取媒体流信息
-    res = avformat_find_stream_info(pAVFormatContext, nullptr);
-    if(res == AVERROR_EOF)
+    ret = avformat_find_stream_info(pAVFormatContext, nullptr);
+    if(ret == AVERROR_EOF)
     {
         qDebug() << "Reached File End";
         close();
@@ -90,10 +90,10 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
         pVideoDecodeContext,
         pAVFormatContext->streams[VideoStreamIndex]->codecpar
     );
-    res = avcodec_open2(pVideoDecodeContext, nullptr, nullptr);
-    if(res != 0)
+    ret = avcodec_open2(pVideoDecodeContext, nullptr, nullptr);
+    if(ret != 0)
     {
-        qDebug() << "Fail to Open a Video Codec, code " << res;
+        qDebug() << "Fail to Open a Video Codec, code " << ret;
         close();
         return -1;
     }
@@ -109,10 +109,10 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
         pAudioDecodeContext,
         pAVFormatContext->streams[AudioStreamIndex]->codecpar
     );
-    res = avcodec_open2(pAudioDecodeContext, nullptr, nullptr);
-    if(res != 0)
+    ret = avcodec_open2(pAudioDecodeContext, nullptr, nullptr);
+    if(ret != 0)
     {
-        qDebug() << "Fail to Open a Audio Codec, code " << res;
+        qDebug() << "Fail to Open a Audio Codec, code " << ret;
         close();
         return -1;
     }
@@ -145,22 +145,22 @@ void ff_player::t_decoder::close()
 
 int32_t ff_player::t_decoder::read_frame()
 {
-    int res;
+    int ret;
     int i = 0;
     while(true)
     {
         AVPacket* pAVPacket = av_packet_alloc();
 
         // 读取数据包
-        res = av_read_frame(pAVFormatContext, pAVPacket);
-        if(res == AVERROR_EOF)
+        ret = av_read_frame(pAVFormatContext, pAVPacket);
+        if(ret == AVERROR_EOF)
         {
             qDebug() << "Reached File End";
             break;
         }
-        else if(res < 0)
+        else if(ret < 0)
         {
-            qDebug() << "Fail to Read Frame , code " << res;
+            qDebug() << "Fail to Read Frame , code " << ret;
             break; 
         }
 
@@ -172,8 +172,8 @@ int32_t ff_player::t_decoder::read_frame()
             w = pVideoDecodeContext->width;
             h = pVideoDecodeContext->height;
              */
-            res = decode_packet_to_frame(pVideoDecodeContext, pAVPacket, &pVideoFrame);
-            if(res == 0 && pVideoFrame != nullptr)
+            ret = decode_packet_to_frame(pVideoDecodeContext, pAVPacket, &pVideoFrame);
+            if(ret == 0 && pVideoFrame != nullptr)
             {
                 i++;
                 // std::clog << i << std::endl;
@@ -189,8 +189,8 @@ int32_t ff_player::t_decoder::read_frame()
         else if(pAVPacket->stream_index == AudioStreamIndex)
         {
             AVFrame *pAudioFrame = nullptr;
-            res = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame);
-            if(res == 0 && pAudioFrame != nullptr)
+            ret = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame);
+            if(ret == 0 && pAudioFrame != nullptr)
             {
                 // std::clog << i << std::endl;
             }
@@ -206,46 +206,46 @@ int32_t ff_player::t_decoder::decode_packet_to_frame(AVCodecContext *pDecoderCon
                                                      AVPacket *pInPacket, AVFrame **ppOutFrame)
 {
     AVFrame *pOutFrame  = nullptr;
-    int     res;
+    int     ret;
     
     // 开始解码
-    res = avcodec_send_packet(pDecoderContext, pInPacket);
-    if(res == AVERROR(EAGAIN))
+    ret = avcodec_send_packet(pDecoderContext, pInPacket);
+    if(ret == AVERROR(EAGAIN))
     {
         qDebug() << "Buffer Full";
     }
-    else if(res == AVERROR(EOF))
+    else if(ret == AVERROR(EOF))
     {
         qDebug() << "Input File End";
     }
-    else if(res < 0)
+    else if(ret < 0)
     {
         qDebug() << "Fail to Send Packet to AVCodec";
     }
 
     // 获取解码后的视频或音频帧
     pOutFrame = av_frame_alloc();
-    res = avcodec_receive_frame(pDecoderContext, pOutFrame);
-    if(res == AVERROR(EAGAIN))
+    ret = avcodec_receive_frame(pDecoderContext, pOutFrame);
+    if(ret == AVERROR(EAGAIN))
     {
         qDebug() << "No Output Data";
         av_frame_free(&pOutFrame);
         (*ppOutFrame) = nullptr;
         return 0;
     }
-    else if(res == AVERROR_EOF)
+    else if(ret == AVERROR_EOF)
     {
         qDebug() << "Output File End";
         av_frame_free(&pOutFrame);
         (*ppOutFrame) = nullptr;
         return AVERROR_EOF;
     }
-    else if(res < 0)
+    else if(ret < 0)
     {
         qDebug() << "Fail to Receive Frame from AVCodec";
         av_frame_free(&pOutFrame);
         (*ppOutFrame) = nullptr;
-        return res;
+        return ret;
     }
 
     (*ppOutFrame) = pOutFrame;

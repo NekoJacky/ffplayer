@@ -1,6 +1,7 @@
 /* ff_player::t_encoder
  * yuv->h.264: encode
  * h.264->mp4: package
+ * 暂时只做视频编码相关
  * */
 
 #ifndef FFPLAYER_ENCODER_H
@@ -49,21 +50,24 @@ private:
     AVFrame         *pVideoFrame;
     uint8_t         *Buffer;
     size_t          size;
-    int32_t         res;
-
+    int32_t         ret;
+    int32_t         VideoStreamIndex;
+    FILE            *InFile;
 public:
     t_encoder()
     {
-        pFmtCtx         = nullptr;
-        pOutFmt         = nullptr;
-        pVideoStream    = nullptr;
-        pVideoCodecCtx  = nullptr;
-        pVideoCodec     = nullptr;
-        pkt             = av_packet_alloc();
-        pVideoFrame     = nullptr;
-        Buffer          = nullptr;
-        size            = 0;
-        res             = -1;
+        pFmtCtx             = nullptr;
+        pOutFmt             = nullptr;
+        pVideoStream        = nullptr;
+        pVideoCodecCtx      = nullptr;
+        pVideoCodec         = nullptr;
+        pkt                 = av_packet_alloc();
+        pVideoFrame         = nullptr;
+        Buffer              = nullptr;
+        size                = 0;
+        ret                 = -1;
+        VideoStreamIndex    = -1;
+        InFile              = nullptr;
     }
 
 public:
@@ -74,7 +78,16 @@ public:
      * @retval -1   具体错误请查看控制台输出信息
      * */
     int32_t open(const char* InFilePath);
+
+    /**
+     * @brief 关闭所有的编码相关struct，关闭文件
+     * */
     void close();
+
+    /**
+     * @brief 刷新编码器
+     * */
+    int32_t flush_encoder();
 };
 
 }
