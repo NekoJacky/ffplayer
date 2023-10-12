@@ -26,3 +26,9 @@ void test2::test()
     decoder->read_frame();
     decoder->close();
 }
+
+void test3::test()
+{
+    encoder->open(filename);
+    encoder->close();
+}

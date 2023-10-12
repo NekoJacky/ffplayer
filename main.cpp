@@ -20,14 +20,6 @@ extern "C"
 
 int main(int argc, char *argv[])
 {
-    /* mp4->yuv
-    auto *a = new ff_player::t_decoder();
-    a->open(R"(D:\Project\C\ffplayer\test\videos\test_mp4.mp4)");
-    a->read_frame();
-    a->close();
-    delete a;
-     */
-
     QApplication a(argc, argv);
 
     Widget w;
@@ -35,4 +27,16 @@ int main(int argc, char *argv[])
     w.show();
 
     return QApplication::exec();
+
+    /* mp4->yuv
+    auto *a = new ff_player::t_decoder();
+    a->open(R"(D:\Project\C\ffplayer\test\videos\test_mp4.mp4)");
+    a->read_frame();
+    a->close();
+    delete a;*/
+
+    /* yuv->h.264
+    auto* t = new test3();
+    t->test();
+    delete t;*/
 }

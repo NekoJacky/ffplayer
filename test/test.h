@@ -4,6 +4,7 @@
 #define FFPLAYER_TEST_H
 
 #include "../src/t_decoder.h"
+#include "../src/t_encoder.h"
 #include "../widget.h"
 
 #include <QString>
@@ -54,11 +55,16 @@ public:
 class test3
 {
 private:
-
+    ff_player::t_encoder* encoder;
+    const char* filename;
 public:
-
+    test3():
+        encoder(new ff_player::t_encoder()),
+        filename(R"(D:\Project\C\ffplayer\test\videos\test_yuv.yuv)")
+    {}
+    ~test3() { delete encoder; }
 public:
-
+    void test();
 };
 
 #endif

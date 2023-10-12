@@ -38,6 +38,8 @@ namespace ff_player
         }
         pVideoStream->time_base.den = 30;
         pVideoStream->time_base.num = 1;
+        pVideoStream->avg_frame_rate.num = 30;
+        pVideoStream->avg_frame_rate.den = 1;
 
         AVCodecParameters *pCodecPara = pFmtCtx->streams[pVideoStream->index]->codecpar;
         pCodecPara->codec_type = AVMEDIA_TYPE_VIDEO;
@@ -67,7 +69,7 @@ namespace ff_player
         pVideoCodecCtx->height          = h;
         pVideoCodecCtx->time_base.num   = 1;
         pVideoCodecCtx->time_base.den   = 30;
-        pVideoCodecCtx->bit_rate        = 400000;
+        pVideoCodecCtx->bit_rate        = 4000000;
         pVideoCodecCtx->gop_size        = 12;
         if(pVideoCodecCtx->codec_id == AV_CODEC_ID_H264)
         {
@@ -124,6 +126,7 @@ namespace ff_player
         int32_t y_size = pVideoCodecCtx->width * pVideoCodecCtx->height;
         av_new_packet(pkt, (int)(size*3));
 
+        pVideoFrame->pts = 0;
         // 编码帧
         for(int32_t i = 0; i < FrameCnt; i++)
         {
@@ -138,7 +141,7 @@ namespace ff_player
             pVideoFrame->data[0] = Buffer;
             pVideoFrame->data[1] = Buffer+y_size;
             pVideoFrame->data[2] = Buffer+y_size*5/4;
-            pVideoFrame->pts = 1;
+            pVideoFrame->pts++;
 
             if(avcodec_send_frame(pVideoCodecCtx, pVideoFrame) >= 0)
             {
