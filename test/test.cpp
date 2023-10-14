@@ -6,7 +6,7 @@ void test1::test()
 {
     if(avformat_open_input(&fmt_cxt, file_name, nullptr, nullptr) < 0)
     {
-        qDebug() << "<Open> Can't open file";
+        qDebug() << "<Open> Can't open_yuv file";
         avformat_close_input(&fmt_cxt);
         return ;
     }
@@ -29,6 +29,8 @@ void test2::test()
 
 void test3::test()
 {
-    encoder->open(filename);
+    encoder->open_yuv(in_filename, out_filename);
+    encoder->decode();
     encoder->close();
 }
+

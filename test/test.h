@@ -56,11 +56,13 @@ class test3
 {
 private:
     ff_player::t_encoder* encoder;
-    const char* filename;
+    const char* in_filename;
+    const char* out_filename;
 public:
     test3():
         encoder(new ff_player::t_encoder()),
-        filename(R"(D:\Project\C\ffplayer\test\videos\test_yuv.yuv)")
+        in_filename(R"(D:\Project\C\ffplayer\test\videos\test_yuv.yuv)"),
+        out_filename(R"(D:\Project\C\ffplayer\test\videos\test_h264.h264)")
     {}
     ~test3() { delete encoder; }
 public:

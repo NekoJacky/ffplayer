@@ -49,7 +49,7 @@ bool player::openFile()
 
     if(avformat_open_input(&FmtCtx, Url.toLocal8Bit().data(), nullptr, nullptr) < 0)
     {
-        qDebug() << "<Open> Can't open file";
+        qDebug() << "<Open> Can't open_yuv file";
         return false;
     }
 
@@ -121,12 +121,12 @@ bool player::openFile()
     }
     if(avcodec_open2(VideoCodecContext, VideoCodec, nullptr) < 0)
     {
-        qDebug() << "<Open> Can't open video codec";
+        qDebug() << "<Open> Can't open_yuv video codec";
         return false;
     }
     if(avcodec_open2(AudioCodecContext, AudioCodec, nullptr) < 0)
     {
-        qDebug() << "<Open> Can't open audio codec";
+        qDebug() << "<Open> Can't open_yuv audio codec";
         return false;
     }
 
@@ -179,7 +179,7 @@ void player::run()
 {
     if(!openFile())
     {
-        qDebug() << "<OpenFile><Run> Can't open file";
+        qDebug() << "<OpenFile><Run> Can't open_yuv file";
         return ;
     }
     int res;

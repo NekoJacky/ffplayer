@@ -3,18 +3,15 @@
 namespace ff_player
 {
 
-    int32_t t_encoder::open(const char *InFilePath)
+    int32_t t_encoder::open_yuv(const char *InFilePath, const char* OutFilePath)
     {
         int32_t w = 1920;
         int32_t h = 1080;
-        // test
-        int32_t FrameCnt = 2847;
 
         // 打开输入文件
         InFile = fopen(InFilePath, "rb");
 
         // 打开输出文件
-        const char*OutFilePath = R"(D:\Project\C\ffplayer\test\videos\test_h264.h264)";
         ret = avformat_alloc_output_context2(&pFmtCtx, nullptr, nullptr, OutFilePath);
         if(ret < 0)
         {
@@ -90,12 +87,20 @@ namespace ff_player
         ret = avcodec_open2(pVideoCodecCtx, pVideoCodec, nullptr);
         if(ret < 0)
         {
-            qDebug() << "Can't open video codec";
+            qDebug() << "Can't open_yuv video codec";
             return -1;
         }
 
         // 输出文件流信息
         av_dump_format(pFmtCtx, 0, OutFilePath, 1);
+
+        return 0;
+    }
+
+    int32_t t_encoder::decode()
+    {
+        // test
+        int32_t FrameCnt = 2847;
 
         // 初始化帧
         pVideoFrame = av_frame_alloc();
@@ -223,4 +228,111 @@ namespace ff_player
         return ret;
     }
 
+    int32_t t_packager::open_h264(const char *InFilePath, const char* OutFilePath)
+    {
+        // 打开输入文件
+        InFile = fopen(InFilePath, "rb");
+        ret = avformat_open_input(&pInFmtCtx, InFilePath, nullptr, nullptr);
+        if(ret < 0)
+        {
+            qDebug() << "<Packager> Can't open input file";
+            return -1;
+        }
+        ret = avformat_find_stream_info(pInFmtCtx, nullptr);
+        if(ret < 0)
+        {
+            qDebug() << "Can't find stream info";
+            return -1;
+        }
+        for(int i = 0; i < pInFmtCtx->nb_streams; i++)
+        {
+            if(pInFmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+            {
+                InVideoStreamIndex = i;
+                break;
+            }
+        }
+        if(InVideoStreamIndex == -1)
+        {
+            qDebug() << "Can't find video stream";
+            return -1;
+        }
+        pCodecPara = pInFmtCtx->streams[InVideoStreamIndex]->codecpar;
+        av_dump_format(pInFmtCtx, 0, InFilePath, 0);
+
+        // 打开输出文件并填充格式数据
+        ret = avformat_alloc_output_context2(&pOutFmtCtx, nullptr, nullptr, OutFilePath);
+        if(ret < 0)
+        {
+            qDebug() << "Can't crate output file";
+            return -1;
+        }
+        // 打开输出文件并填充数据
+        ret = avio_open(&pOutFmtCtx->pb, OutFilePath, AVIO_FLAG_READ_WRITE);
+        if(ret < 0)
+        {
+            qDebug() << "Can't open output file";
+            return -1;
+        }
+
+        // 创建一个视频流
+        pOutVideoStream = avformat_new_stream(pOutFmtCtx, nullptr);
+        if(!pOutVideoStream)
+        {
+            qDebug() << "Can't create video stream";
+            return -1;
+        }
+        pOutVideoStream->time_base.den = 30;
+        pOutVideoStream->time_base.num = 1;
+        OutVideoStreamIndex = pOutVideoStream->index;
+
+        pOutVideoCodec = const_cast<AVCodec*>(avcodec_find_encoder(pCodecPara->codec_id));
+        if(!pOutVideoStream)
+        {
+            qDebug() << "Can't find any encoder";
+            return -1;
+        }
+
+        pOutVideoCodecContext = avcodec_alloc_context3(pOutVideoCodec);
+        pOutVideoCodecPara = pOutFmtCtx->streams[OutVideoStreamIndex]->codecpar;
+        ret = avcodec_parameters_copy(pOutVideoCodecPara, pCodecPara);
+        if(ret < 0)
+        {
+            qDebug() << "Can't copy parameters";
+            return -1;
+        }
+        ret = avcodec_parameters_to_context(pOutVideoCodecContext, pOutVideoCodecPara);
+        if(ret < 0)
+        {
+            qDebug() << "Can't get codec context from parameters";
+            return -1;
+        }
+        pOutVideoCodecContext->time_base.den = 30;
+        pOutVideoCodecContext->time_base.num = 1;
+
+        ret = avcodec_open2(pOutVideoCodecContext, pOutVideoCodec, nullptr);
+        if(ret < 0)
+        {
+            qDebug() << "Can't open output codec";
+            return -1;
+        }
+        av_dump_format(pOutFmtCtx, 0, OutFilePath, 1);
+
+        return 0;
+    }
+
+    int32_t t_packager::package()
+    {
+        return 0;
+    }
+
+    void t_packager::close()
+    {
+
+    }
+
+    void t_encoder_packager::encode_and_packge()
+    {
+
+    }
 }
