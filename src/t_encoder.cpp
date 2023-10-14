@@ -231,7 +231,6 @@ namespace ff_player
     int32_t t_packager::open_h264(const char *InFilePath, const char* OutFilePath)
     {
         // 打开输入文件
-        InFile = fopen(InFilePath, "rb");
         ret = avformat_open_input(&pInFmtCtx, InFilePath, nullptr, nullptr);
         if(ret < 0)
         {
@@ -323,15 +322,80 @@ namespace ff_player
 
     int32_t t_packager::package()
     {
+        ret = avformat_write_header(pOutFmtCtx, nullptr);
+        if(ret < 0)
+        {
+            qDebug() << "Can't write header";
+            return -1;
+        }
+        pInVideoStream = pInFmtCtx->streams[InVideoStreamIndex];
+        while(av_read_frame(pInFmtCtx, pPacket) >= 0)
+        {
+            if(pPacket->stream_index == InVideoStreamIndex)
+            {
+                if(pPacket->pts == AV_NOPTS_VALUE)
+                {
+                    AVRational time_base = pInVideoStream->time_base;
+                    int64_t d = AV_TIME_BASE / av_q2d(pInVideoStream->r_frame_rate);
+                    pPacket->pts = int64_t((double)(FrameIndex*d) / (double)(av_q2d(time_base)*AV_TIME_BASE));
+                    pPacket->dts = pPacket->pts;
+                    pPacket->duration = int64_t(double(d) / (av_q2d(time_base)*AV_TIME_BASE));
+                    FrameIndex++;
+                }
+                pPacket->pts = av_rescale_q_rnd(pPacket->pts,
+                                                pInVideoStream->time_base,
+                                                pOutVideoStream->time_base,
+                                                (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+                pPacket->dts = av_rescale_q_rnd(pPacket->dts,
+                                                pInVideoStream->time_base,
+                                                pOutVideoStream->time_base,
+                                                (enum AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
+                pPacket->duration = av_rescale_q(pPacket->duration, pInVideoStream->time_base,
+                                                 pOutVideoStream->time_base);
+                pPacket->pos = -1;
+                pPacket->stream_index = OutVideoStreamIndex;
+                ret = av_interleaved_write_frame(pOutFmtCtx, pPacket);
+                if(ret < 0)
+                {
+                    qDebug() << "Error packet";
+                    return -1;
+                }
+                av_packet_unref(pPacket);
+            }
+        }
+        av_write_trailer(pOutFmtCtx);
+
         return 0;
     }
 
     void t_packager::close()
     {
-
+        if(!pPacket)
+        {
+            av_packet_free(&pPacket);
+            pPacket = nullptr;
+        }
+        if(!pInFmtCtx)
+        {
+            avformat_close_input(&pInFmtCtx);
+            avformat_free_context(pInFmtCtx);
+            pInFmtCtx = nullptr;
+        }
+        if(!pOutFmtCtx)
+        {
+            avformat_close_input(&pOutFmtCtx);
+            avformat_free_context(pOutFmtCtx);
+            pOutFmtCtx = nullptr;
+        }
+        if(!pOutVideoCodecContext)
+        {
+            avcodec_close(pOutVideoCodecContext);
+            avcodec_free_context(&pOutVideoCodecContext);
+            pOutVideoCodecContext = nullptr;
+        }
     }
 
-    void t_encoder_packager::encode_and_packge()
+    void t_encoder_packager::encode_and_package()
     {
 
     }

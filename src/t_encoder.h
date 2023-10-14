@@ -117,7 +117,6 @@ private:
     int32_t             InVideoStreamIndex;
     int32_t             OutVideoStreamIndex;
     int                 ret;
-    FILE*               InFile;
 public:
     t_packager():
             pInFmtCtx(nullptr),
@@ -129,11 +128,10 @@ public:
             pOutVideoCodecPara(nullptr),
             pInVideoStream(nullptr),
             pPacket(av_packet_alloc()),
-            FrameIndex(-1),
+            FrameIndex(0),
             InVideoStreamIndex(-1),
             OutVideoStreamIndex(-1),
-            ret(-1),
-            InFile(nullptr)
+            ret(-1)
     {}
 public:
     /**
@@ -144,6 +142,12 @@ public:
      * @retval -1   具体错误请查看控制台输出信息
      * */
     int32_t open_h264(const char* InFilePath, const char* OutFilePath);
+
+    /**
+     * @brief 将h.264等视频文件与mp3等音频文件打包为目标(mp4)文件
+     * @retval 0    成功打包文件
+     * @retval -1   具体错误查看控制台输出信息
+     * */
     int32_t package();
     void close();
 };
@@ -157,7 +161,7 @@ public:
     t_encoder_packager() = default;
     ~t_encoder_packager() = default;
 public:
-    void encode_and_packge();
+    void encode_and_package();
 };
 
 }
