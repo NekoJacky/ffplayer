@@ -240,7 +240,7 @@ namespace ff_player
         ret = avformat_find_stream_info(pInFmtCtx, nullptr);
         if(ret < 0)
         {
-            qDebug() << "Can't find stream info";
+            qDebug() << "<Packager> Can't find stream info";
             return -1;
         }
         for(int i = 0; i < pInFmtCtx->nb_streams; i++)
@@ -253,24 +253,26 @@ namespace ff_player
         }
         if(InVideoStreamIndex == -1)
         {
-            qDebug() << "Can't find video stream";
+            qDebug() << "<Packager> Can't find video stream";
             return -1;
         }
         pCodecPara = pInFmtCtx->streams[InVideoStreamIndex]->codecpar;
         av_dump_format(pInFmtCtx, 0, InFilePath, 0);
+        // 设置视频帧率(test video frame rate)
+        pInFmtCtx->streams[InVideoStreamIndex]->r_frame_rate = {30, 1};
 
         // 打开输出文件并填充格式数据
         ret = avformat_alloc_output_context2(&pOutFmtCtx, nullptr, nullptr, OutFilePath);
         if(ret < 0)
         {
-            qDebug() << "Can't crate output file";
+            qDebug() << "<Packager> Can't crate output file";
             return -1;
         }
         // 打开输出文件并填充数据
         ret = avio_open(&pOutFmtCtx->pb, OutFilePath, AVIO_FLAG_READ_WRITE);
         if(ret < 0)
         {
-            qDebug() << "Can't open output file";
+            qDebug() << "<Packager> Can't open output file";
             return -1;
         }
 
@@ -278,7 +280,7 @@ namespace ff_player
         pOutVideoStream = avformat_new_stream(pOutFmtCtx, nullptr);
         if(!pOutVideoStream)
         {
-            qDebug() << "Can't create video stream";
+            qDebug() << "<Packager> Can't create video stream";
             return -1;
         }
         pOutVideoStream->time_base.den = 30;
@@ -288,7 +290,7 @@ namespace ff_player
         pOutVideoCodec = const_cast<AVCodec*>(avcodec_find_encoder(pCodecPara->codec_id));
         if(!pOutVideoStream)
         {
-            qDebug() << "Can't find any encoder";
+            qDebug() << "<Packager> Can't find any encoder";
             return -1;
         }
 
@@ -297,13 +299,13 @@ namespace ff_player
         ret = avcodec_parameters_copy(pOutVideoCodecPara, pCodecPara);
         if(ret < 0)
         {
-            qDebug() << "Can't copy parameters";
+            qDebug() << "<Packager> Can't copy parameters";
             return -1;
         }
         ret = avcodec_parameters_to_context(pOutVideoCodecContext, pOutVideoCodecPara);
         if(ret < 0)
         {
-            qDebug() << "Can't get codec context from parameters";
+            qDebug() << "<Packager> Can't get codec context from parameters";
             return -1;
         }
         pOutVideoCodecContext->time_base.den = 30;
@@ -312,7 +314,7 @@ namespace ff_player
         ret = avcodec_open2(pOutVideoCodecContext, pOutVideoCodec, nullptr);
         if(ret < 0)
         {
-            qDebug() << "Can't open output codec";
+            qDebug() << "<Packager> Can't open output codec";
             return -1;
         }
         av_dump_format(pOutFmtCtx, 0, OutFilePath, 1);
@@ -325,7 +327,7 @@ namespace ff_player
         ret = avformat_write_header(pOutFmtCtx, nullptr);
         if(ret < 0)
         {
-            qDebug() << "Can't write header";
+            qDebug() << "<Packager> Can't write header";
             return -1;
         }
         pInVideoStream = pInFmtCtx->streams[InVideoStreamIndex];
@@ -357,7 +359,7 @@ namespace ff_player
                 ret = av_interleaved_write_frame(pOutFmtCtx, pPacket);
                 if(ret < 0)
                 {
-                    qDebug() << "Error packet";
+                    qDebug() << "<Packager> Error packet";
                     return -1;
                 }
                 av_packet_unref(pPacket);

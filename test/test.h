@@ -69,4 +69,19 @@ public:
     void test();
 };
 
+class test4
+{
+private:
+    ff_player::t_packager* packager;
+    const char* in_filename;
+    const char* out_filename;
+public:
+    test4(): packager(new ff_player::t_packager()),
+        in_filename(R"(D:\Project\C\ffplayer\test\videos\test_h264.h264)"),
+        out_filename(R"(D:\Project\C\ffplayer\test\videos\test_mp4_1.mp4)") {}
+    ~test4() { delete packager; }
+public:
+    void test();
+};
+
 #endif

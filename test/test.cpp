@@ -34,3 +34,9 @@ void test3::test()
     encoder->close();
 }
 
+void test4::test()
+{
+    packager->open_h264(in_filename, out_filename);
+    packager->package();
+    packager->close();
+}
