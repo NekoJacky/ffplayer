@@ -55,6 +55,7 @@ extern "C"
     AVCodecContext
         每个AVStream对应一个AVCodecContext
         存储该视频/音频流使用解码方式的相关数据
+        pkt_timebase    帧率?
     AVCodec
         每个AVCodecContext中对应一个AVCodec
         包含该视频/音频对应的解码器
@@ -83,6 +84,8 @@ private:
     int             w;
     int             h;
      */
+    /* mp3->pcm */
+    FILE            *File;
 
 public:
     t_decoder()
@@ -97,17 +100,19 @@ public:
         w                   = 0;
         h                   = 0;
          */
+        /* mp3->pcm */
+        File                = fopen(R"(D:\Project\C\ffplayer\test\audios\test_pcm.pcm)", "w+b");
     }
 
 public:
     /**
      * @brief 打开并解析媒体文件
      * 注意，open_yuv()函数只用来解封装，解码媒体文件使用read_frame()
-     * @param FilePath  需要解析的文件的路径
+     * @param InFilePath  需要解析的文件的路径
      * @retval 0    成功打开并解析文件
      * @retval -1   出现错误，具体错误查看控制台中输出的信息
      * */
-    int32_t open(const char *FilePath);
+    int32_t open(const char *InFilePath);
 
     /**
      * @brief 关闭打开的媒体文件，释放系统资源

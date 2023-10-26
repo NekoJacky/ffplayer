@@ -161,7 +161,7 @@ public:
     t_encoder_packager() = default;
     ~t_encoder_packager() = default;
 public:
-    void encode_and_package();
+    void encode_and_package(const char* InFilePath, const char* OutFilePath);
 };
 
 }

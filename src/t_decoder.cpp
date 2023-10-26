@@ -1,12 +1,12 @@
 #include "t_decoder.h"
 
-int32_t ff_player::t_decoder::open(const char *FilePath)
+int32_t ff_player::t_decoder::open(const char *InFilePath)
 {
     AVCodec *pVideoDecoder = nullptr;
     AVCodec *pAudioDecoder = nullptr;
     int     ret;
     
-    avformat_open_input(&pAVFormatContext, FilePath, nullptr, nullptr);
+    avformat_open_input(&pAVFormatContext, InFilePath, nullptr, nullptr);
     if(pAVFormatContext == nullptr)
     {
         qDebug() << "Can't Open the File";
@@ -22,7 +22,7 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
         return -1;
     }
 
-    av_dump_format(pAVFormatContext, 0, FilePath, 0);
+    av_dump_format(pAVFormatContext, 0, InFilePath, 0);
 
     // 遍历媒体流信息
     for(unsigned int i = 0; i < pAVFormatContext->nb_streams; i++)
@@ -67,12 +67,18 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
         }
     }
 
-    if(pAudioDecoder == nullptr || pVideoDecoder == nullptr)
+    /*if(pVideoDecoder == nullptr)
     {
-        qDebug() << "<Open> Can't find video or Audio Stream";
+        qDebug() << "<Open> Can't find video Stream";
         close();
         return -1;
     }
+    if(pAudioDecoder == nullptr)
+    {
+        qDebug() << "<Open> Can't find audio Stream";
+        close();
+        return -1;
+    }*/
 
     // seek到0ms读取
     avformat_seek_file(pAVFormatContext, -1, INT64_MIN, 0, INT64_MAX, 0);
@@ -87,9 +93,9 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
     }
     // 将编解码器参数从AVCodecContext中分离出来
     avcodec_parameters_to_context(
-        pVideoDecodeContext,
-        pAVFormatContext->streams[VideoStreamIndex]->codecpar
-    );
+            pVideoDecodeContext,
+            pAVFormatContext->streams[VideoStreamIndex]->codecpar
+            );
     ret = avcodec_open2(pVideoDecodeContext, nullptr, nullptr);
     if(ret != 0)
     {
@@ -109,6 +115,8 @@ int32_t ff_player::t_decoder::open(const char *FilePath)
         pAudioDecodeContext,
         pAVFormatContext->streams[AudioStreamIndex]->codecpar
     );
+    pAudioDecodeContext->pkt_timebase =
+            pAVFormatContext->streams[AudioStreamIndex]->time_base;
     ret = avcodec_open2(pAudioDecodeContext, nullptr, nullptr);
     if(ret != 0)
     {
@@ -147,6 +155,7 @@ int32_t ff_player::t_decoder::read_frame()
 {
     int ret;
     int i = 0;
+    int j = 0;
     while(true)
     {
         AVPacket* pAVPacket = av_packet_alloc();
@@ -192,7 +201,24 @@ int32_t ff_player::t_decoder::read_frame()
             ret = decode_packet_to_frame(pAudioDecodeContext, pAVPacket, &pAudioFrame);
             if(ret == 0 && pAudioFrame != nullptr)
             {
-                // std::clog << i << std::endl;
+                j++;
+                // std::clog << j << std::endl;
+                /* mp3->pcm */
+                // planner: 平面，数据以nb_samples采样点交错
+                // 数据排列方式为LLLLLLRRRRRRLLLLLLRRRRRR...（每组LLLLLLRRRRRR为一个音频帧）
+                // 不带P的音频格式为LRLR...每个LR为一个音频样本
+                ret = av_sample_fmt_is_planar(pAudioDecodeContext->sample_fmt);
+                if(!ret)
+                    continue;
+                int NBytes = av_get_bytes_per_sample(pAudioDecodeContext->sample_fmt);
+                // pcm格式播放时为LRLR...形式，因此要交错保存
+                for(int k = 0; k < pAudioFrame->nb_samples; k++)
+                {
+                    for(int ch = 0; ch < pAudioDecodeContext->channels; ch++)
+                    {
+                        fwrite(pAudioFrame->data[ch]+NBytes*i, 1, NBytes, File);
+                    }
+                }
             }
         }
 

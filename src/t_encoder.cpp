@@ -397,8 +397,14 @@ namespace ff_player
         }
     }
 
-    void t_encoder_packager::encode_and_package()
+    void t_encoder_packager::encode_and_package(const char* InFilePath, const char* OutFilePath)
     {
-
+        encoder.open_yuv(InFilePath, "./temp.h264");
+        encoder.decode();
+        encoder.close();
+        packager.open_h264("./temp.h264", OutFilePath);
+        packager.package();
+        packager.close();
+        std::remove("./temp.h264");
     }
 }
