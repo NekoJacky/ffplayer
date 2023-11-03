@@ -6,12 +6,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_PREFIX_PATH "D:/apps/Qt/6.4.2/mingw_64/lib/cmake")
+set(CMAKE_PREFIX_PATH "D:/apps/Qt/6.5.3/mingw_64/lib/cmake")
 
 find_package(Qt6 COMPONENTS
         Core
         Gui
         Widgets
+        Multimedia
         REQUIRED)
 
 include_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/include)
@@ -27,6 +28,7 @@ target_link_libraries(ffplayer
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        Qt6::Multimedia
         avdevice
         avfilter
         avformat

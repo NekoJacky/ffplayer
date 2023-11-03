@@ -44,4 +44,7 @@ int main(int argc, char *argv[])
     auto t = new test4();
     t->test();
     delete t;*/
+
+    /*test5 t;
+    t.test();*/
 }

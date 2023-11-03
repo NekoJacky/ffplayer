@@ -3,7 +3,7 @@
 namespace ff_player
 {
 
-    int32_t t_encoder::open_yuv(const char *InFilePath, const char* OutFilePath)
+    int32_t t_encode_yuv::open_yuv(const char *InFilePath, const char* OutFilePath)
     {
         int32_t w = 1920;
         int32_t h = 1080;
@@ -97,7 +97,7 @@ namespace ff_player
         return 0;
     }
 
-    int32_t t_encoder::decode()
+    int32_t t_encode_yuv::decode()
     {
         // test
         int32_t FrameCnt = 2847;
@@ -179,7 +179,7 @@ namespace ff_player
         return 0;
     }
 
-    void t_encoder::close()
+    void t_encode_yuv::close()
     {
         if(pFmtCtx) {
             avio_close(pFmtCtx->pb);
@@ -203,7 +203,7 @@ namespace ff_player
         fclose(InFile);
     }
 
-    int32_t t_encoder::flush_encoder()
+    int32_t t_encode_yuv::flush_encoder()
     {
         int32_t f_ret;
         AVPacket *f_pkt = av_packet_alloc();
@@ -399,9 +399,10 @@ namespace ff_player
 
     void t_encoder_packager::encode_and_package(const char* InFilePath, const char* OutFilePath)
     {
-        encoder.open_yuv(InFilePath, "./temp.h264");
+        // todo: 写完encoder以后撤销注释
+        /*encoder.open_yuv(InFilePath, "./temp.h264");
         encoder.decode();
-        encoder.close();
+        encoder.close();*/
         packager.open_h264("./temp.h264", OutFilePath);
         packager.package();
         packager.close();

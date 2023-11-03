@@ -40,3 +40,8 @@ void test4::test()
     packager->package();
     packager->close();
 }
+
+void test5::test()
+{
+    Audio_player();
+}

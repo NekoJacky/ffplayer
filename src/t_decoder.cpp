@@ -214,7 +214,7 @@ int32_t ff_player::t_decoder::read_frame()
                 // pcm格式播放时为LRLR...形式，因此要交错保存
                 for(int k = 0; k < pAudioFrame->nb_samples; k++)
                 {
-                    for(int ch = 0; ch < pAudioDecodeContext->channels; ch++)
+                    for(int ch = 0; ch < pAudioDecodeContext->ch_layout.nb_channels; ch++)
                     {
                         fwrite(pAudioFrame->data[ch]+NBytes*i, 1, NBytes, File);
                     }

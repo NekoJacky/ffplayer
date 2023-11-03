@@ -36,7 +36,7 @@ namespace ff_player
  * yuv->h.264
  * 暂时只做视频编码相关
  * */
-class t_encoder
+class t_encode_yuv
 {
 private:
     AVFormatContext *pFmtCtx;
@@ -52,7 +52,7 @@ private:
     int32_t         VideoStreamIndex;
     FILE            *InFile;
 public:
-    t_encoder()
+    t_encode_yuv()
     {
         pFmtCtx             = nullptr;
         pOutFmt             = nullptr;
@@ -95,6 +95,11 @@ protected:
      * @brief 刷新编码器
      * */
     int32_t flush_encoder();
+};
+
+class t_encoder
+{
+
 };
 
 /* ff_player::t_packager

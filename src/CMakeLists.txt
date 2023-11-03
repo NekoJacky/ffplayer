@@ -1,5 +1,6 @@
 find_package(Qt6 COMPONENTS
         Core
+        Multimedia
         REQUIRED
 )
 
@@ -10,11 +11,14 @@ aux_source_directory(. SRC)
 
 add_library(src ${SRC}
         t_encoder.cpp
-        t_encoder.h)
+        t_encoder.h
+        audio_player.cpp
+        audio_player.h)
 
 target_link_libraries(src
         Qt6::Core
         Qt6::Widgets
+        Qt6::Multimedia
         avdevice
         avfilter
         avformat

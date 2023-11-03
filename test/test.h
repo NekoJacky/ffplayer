@@ -5,6 +5,7 @@
 
 #include "../src/t_decoder.h"
 #include "../src/t_encoder.h"
+#include "../src/audio_player.h"
 #include "../widget.h"
 
 #include <QString>
@@ -55,12 +56,12 @@ public:
 class test3
 {
 private:
-    ff_player::t_encoder* encoder;
+    ff_player::t_encode_yuv* encoder;
     const char* in_filename;
     const char* out_filename;
 public:
     test3():
-        encoder(new ff_player::t_encoder()),
+        encoder(new ff_player::t_encode_yuv()),
         in_filename(R"(D:\Project\C\ffplayer\test\videos\test_yuv.yuv)"),
         out_filename(R"(D:\Project\C\ffplayer\test\videos\test_h264.h264)")
     {}
@@ -81,6 +82,14 @@ public:
         out_filename(R"(D:\Project\C\ffplayer\test\videos\test_mp4_1.mp4)") {}
     ~test4() { delete packager; }
 public:
+    void test();
+};
+
+class test5
+{
+public:
+    test5() = default;
+    ~test5() = default;
     void test();
 };
 
