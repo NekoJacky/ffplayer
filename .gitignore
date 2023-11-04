@@ -9,6 +9,7 @@
 *.mp3
 *.yuv
 *.h264
+*.pcm
 
 #files
 temp.txt

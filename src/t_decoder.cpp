@@ -1,5 +1,7 @@
 #include "t_decoder.h"
 
+// fixme: 音频解码出现问题
+
 int32_t ff_player::t_decoder::open(const char *InFilePath)
 {
     AVCodec *pVideoDecoder = nullptr;

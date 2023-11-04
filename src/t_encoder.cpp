@@ -228,6 +228,64 @@ namespace ff_player
         return ret;
     }
 
+    int32_t t_encode_pcm::open_pcm(const char *InFilePath, const char* OutFilePath)
+    {
+        InFile = fopen(InFilePath, "rb");
+        ret = avformat_alloc_output_context2(&pFmtCtx, nullptr, nullptr, OutFilePath);
+        if(ret < 0)
+        {
+            qDebug() << "Can't alloc output context";
+            return -1;
+        }
+        pOutFmt = const_cast<AVOutputFormat*>(pFmtCtx->oformat);
+        ret = avio_open(&pFmtCtx->pb, OutFilePath, AVIO_FLAG_READ_WRITE);
+        if(ret < 0)
+        {
+            qDebug() << "Can't open output file";
+            return -1;
+        }
+        pAudioStream = avformat_new_stream(pFmtCtx, nullptr);
+        if(!pAudioStream)
+        {
+            qDebug() << "Can't crate output stream";
+            return -1;
+        }
+
+        pAudioCodecPara = pFmtCtx->streams[pAudioStream->index]->codecpar;
+        pAudioCodecPara->codec_type = AVMEDIA_TYPE_AUDIO;
+        pAudioCodecPara->codec_id = pOutFmt->audio_codec;
+        pAudioCodecPara->sample_rate = 44100;
+        pAudioCodecPara->ch_layout.order = AV_CHANNEL_ORDER_NATIVE;
+        pAudioCodecPara->bit_rate = 128000;
+        pAudioCodecPara->format = AV_SAMPLE_FMT_FLTP;
+        pAudioCodecPara->ch_layout.nb_channels = 2;
+
+        pAudioCodec = const_cast<AVCodec*>(avcodec_find_encoder(pOutFmt->audio_codec));
+        if(!pAudioCodec)
+        {
+            qDebug() << "Can't find codec";
+            return -1;
+        }
+        pAudioCodecCtx = avcodec_alloc_context3(pAudioCodec);
+        avcodec_parameters_to_context(pAudioCodecCtx, pAudioCodecPara);
+        if(!pAudioCodecCtx)
+        {
+            qDebug() << "Can't create codec context from codec para";
+            return -1;
+        }
+
+        ret = avcodec_open2(pAudioCodecCtx, pAudioCodec, nullptr);
+        if(ret < 0)
+        {
+            qDebug() << "Can't open codec";
+            return  -1;
+        }
+
+        av_dump_format(pFmtCtx, 0, OutFilePath, 1);
+
+        return 0;
+    }
+
     int32_t t_packager::open_h264(const char *InFilePath, const char* OutFilePath)
     {
         // 打开输入文件

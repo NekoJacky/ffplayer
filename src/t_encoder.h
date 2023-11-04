@@ -18,23 +18,11 @@ extern "C"
 }
 #endif
 
-/* AVInputFormat
- * AVOutputFormat
- *      包含输入/输出文件容器格式
- * AVRational
- *      表示有理数的结构
- *      AVRational.den表示分母
- *      AVRational.num表示分子
- *      AVStream.time_base是一个AVRational结构
- *      用于表示视频帧率
- * */
-
 namespace ff_player
 {
 
 /* ff_player::t_encoder
  * yuv->h.264
- * 暂时只做视频编码相关
  * */
 class t_encode_yuv
 {
@@ -97,8 +85,57 @@ protected:
     int32_t flush_encoder();
 };
 
+/* ff_player::t_encode_pcm
+ * pcm->mp3
+ * */
+class t_encode_pcm
+{
+private:
+    AVFormatContext     *pFmtCtx;
+    AVOutputFormat      *pOutFmt;
+    AVStream            *pAudioStream;
+    AVCodecContext      *pAudioCodecCtx;
+    AVCodec             *pAudioCodec;
+    AVCodecParameters   *pAudioCodecPara;
+    AVPacket            *pkt;
+    AVFrame             *pAudioFrame;
+    uint8_t             *Buffer;
+    size_t              size;
+    int32_t             ret;
+    int32_t             AudioStreamIndex;
+    FILE                *InFile;
+
+public:
+    t_encode_pcm(): pFmtCtx(avformat_alloc_context()),
+                    pOutFmt(nullptr),
+                    pAudioStream(nullptr),
+                    pAudioCodecCtx(nullptr),
+                    pAudioCodec(nullptr),
+                    pAudioCodecPara(nullptr),
+                    pkt(av_packet_alloc()),
+                    pAudioFrame(av_frame_alloc()),
+                    Buffer(nullptr),
+                    size(0),
+                    ret(-1),
+                    AudioStreamIndex(-1),
+                    InFile(nullptr) {}
+
+public:
+    /**
+     * @brief 打开文件，打开编码器
+     * @param InFilePath    输入文件路径
+     * @param OutFilePath   输出文件路径
+     * @retval 0    成功打开文件与编码器
+     * @retval -1   出现错误，具体错误请打开控制台查看
+     * */
+    int32_t open_pcm(const char* InFilePath, const char* OutFilePath);
+};
+
 class t_encoder
 {
+private:
+
+public:
 
 };
 

@@ -28,20 +28,20 @@ int main(int argc, char *argv[])
 
     return QApplication::exec();
 
-    /* mp4->yuv
-    auto *a = new ff_player::t_decoder();
-    a->open(R"(D:\Project\C\ffplayer\test\videos\test_mp4.mp4)");
+    /*mp4->yuv*/
+    /*auto *a = new ff_player::t_decoder();
+    a->open("D:/Project/C/ffplayer/test/audios/test_mp3.mp3");
     a->read_frame();
     a->close();
     delete a;*/
 
-    /* yuv->h.264
-    auto* t = new test3();
+    /* yuv->h.264 */
+    /*auto* t = new test3();
     t->test();
     delete t;*/
 
-    /* h.264->mp4
-    auto t = new test4();
+    /* h.264->mp4*/
+    /*auto t = new test4();
     t->test();
     delete t;*/
 

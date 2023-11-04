@@ -46,7 +46,7 @@ private:
     const char* file_name;
 
 public:
-    test2() { decoder = new ff_player::t_decoder(); file_name = "D:/Project/C/ffplayer/test/videos/test_mp4.mp4"; }
+    test2() { decoder = new ff_player::t_decoder(); file_name = R"(D:\Project\C\ffplayer\test\audios\test_mp3.mp3)"; }
     ~test2() { delete decoder; file_name = nullptr; }
 
 public:
