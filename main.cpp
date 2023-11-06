@@ -17,6 +17,7 @@ extern "C"
 #include "test/test.h"
 #include "widget.h"
 #include "src/t_decoder.h"
+#include "src/audio_player.h"
 
 int main(int argc, char *argv[])
 {

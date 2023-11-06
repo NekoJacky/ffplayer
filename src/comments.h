@@ -45,13 +45,20 @@
  *      每种解码器都对应一个AVCodec结构
  *  AVPacket
  *      存放解码前数据
- *      stream_index    标识Packet所在的音视频流
+ *      int stream_index    标识Packet所在的音视频流
  *  AVFrame
  *      存放解码后数据
- * AVInputFormat
- * AVOutputFormat
+ *      uint8_t* data   原始数据(RGB, YUV, PCM)
+ *      int linesize[AV_NUM_DATA_POINTERS]  data中一行数据大小
+ *      int width, height   视频的宽 高
+ *      int format  帧格式
+ *      int nb_samples  每个音频帧内包含的采样数
+ *      int sample_rate 采样率
+ *      AVChannelLayout ch_layout   声道布局和声道数
+ *  AVInputFormat
+ *  AVOutputFormat
  *      包含输入/输出文件容器格式
- * AVRational
+ *  AVRational
  *      表示有理数的结构
  *      AVRational.den表示分母
  *      AVRational.num表示分子

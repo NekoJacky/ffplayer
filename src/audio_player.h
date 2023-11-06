@@ -37,6 +37,6 @@ extern "C"
 
 const int MaxAudioFrameSize = 192000;
 
-int Audio_player();
+int audio_player();
 
 #endif //FFPLAYER_AUDIO_PLAYER_H

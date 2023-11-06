@@ -14,6 +14,7 @@ extern "C"
 #include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
+#include <libswresample/swresample.h>
 #ifdef __cplusplus
 }
 #endif
@@ -129,6 +130,10 @@ public:
      * @retval -1   出现错误，具体错误请打开控制台查看
      * */
     int32_t open_pcm(const char* InFilePath, const char* OutFilePath);
+
+    int32_t decode();
+
+    void close();
 };
 
 class t_encoder
@@ -141,7 +146,6 @@ public:
 
 /* ff_player::t_packager
  * h.264->mp4
- * 暂时只做视频编码相关
  * */
 class t_packager
 {

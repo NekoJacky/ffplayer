@@ -286,6 +286,59 @@ namespace ff_player
         return 0;
     }
 
+    int32_t t_encode_pcm::decode()
+    {
+        // 设置重采样参数
+        pAudioFrame->nb_samples = pAudioCodecCtx->frame_size;
+        pAudioFrame->format = pAudioCodecCtx->sample_fmt;
+        pAudioFrame->ch_layout.nb_channels = 2;
+
+        // PCM重采样
+        struct SwrContext* pSwrCtx;
+        swr_alloc_set_opts2(&pSwrCtx, &(pAudioCodecCtx->ch_layout),
+                            pAudioCodecCtx->sample_fmt, pAudioCodecCtx->sample_rate,
+                            &(pAudioFrame->ch_layout), AV_SAMPLE_FMT_FLTP, 44100, 0, nullptr);
+        swr_init(pSwrCtx);
+
+        uint8_t **data;
+        data = (uint8_t**)calloc(pAudioCodecCtx->ch_layout.nb_channels, sizeof(*data));
+        av_samples_alloc(data, nullptr, pAudioCodecCtx->ch_layout.nb_channels, pAudioCodecCtx->frame_size,
+                         pAudioCodecCtx->sample_fmt, 0);
+        size = av_samples_get_buffer_size(nullptr, pAudioCodecCtx->ch_layout.nb_channels,
+                                              pAudioCodecCtx->frame_size, pAudioCodecCtx->sample_fmt, 1);
+        Buffer = (uint8_t*)av_malloc(size);
+        avcodec_fill_audio_frame(pAudioFrame, pAudioCodecCtx->ch_layout.nb_channels,
+                                 pAudioCodecCtx->sample_fmt, Buffer, (int)size, 1);
+
+        // 编码
+        int32_t i = 0;
+        while(true)
+        {
+            // 一帧数据的长度
+            int length = pAudioFrame->nb_samples *
+                         pAudioFrame->ch_layout.nb_channels *
+                         av_get_bytes_per_sample(AV_SAMPLE_FMT_FLTP);
+            // 读取pcm
+            ret = (int)fread(Buffer, 1, length, InFile);
+            if(ret < 0)
+            {
+                qDebug() << "Can't read input file";
+                return -1;
+            }
+            else if(feof(InFile))
+            {
+                qDebug() << "End of infile";
+                break;
+            }
+            i++;
+        }
+    }
+
+    void t_encode_pcm::close()
+    {
+
+    }
+
     int32_t t_packager::open_h264(const char *InFilePath, const char* OutFilePath)
     {
         // 打开输入文件

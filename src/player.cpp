@@ -49,7 +49,7 @@ bool player::openFile()
 
     if(avformat_open_input(&FmtCtx, Url.toLocal8Bit().data(), nullptr, nullptr) < 0)
     {
-        qDebug() << "<Open> Can't open_yuv file";
+        qDebug() << "<Open> Can't open file";
         return false;
     }
 

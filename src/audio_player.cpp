@@ -2,7 +2,7 @@
 
 #include "audio_player.h"
 
-int Audio_player()
+int audio_player()
 {
     QString InFileUrl = R"(D:\Project\C\ffplayer\test\audios\test_mp3.mp3)";
     QAudioSink *audioSink;
@@ -80,9 +80,11 @@ int Audio_player()
     auto out_channel_layout = codecCtx->ch_layout;
     enum AVSampleFormat out_sample_fmt = AV_SAMPLE_FMT_S16;
     int out_sample_rate = codecCtx->sample_rate;
-    int out_channels = out_channel_layout.nb_channels;//printf("out rate : %d , out_channel is: %d\n",out_sample_rate,out_channels);
+    int out_channels = out_channel_layout.nb_channels;
+    //printf("out rate : %d , out_channel is: %d\n",out_sample_rate,out_channels);
     av_packet_free(&pkt);
-    auto *audio_out_buffer = (uint8_t *) av_malloc(MaxAudioFrameSize * 2);/* SwrContext   音频重采样结构体 类似于SwsContext */
+    /* SwrContext   音频重采样结构体 类似于SwsContext */
+    auto *audio_out_buffer = (uint8_t *) av_malloc(MaxAudioFrameSize * 2);
     avcodec_close(codecCtx);
     SwrContext *swr_ctx = nullptr;
     swr_alloc_set_opts2(&swr_ctx,
