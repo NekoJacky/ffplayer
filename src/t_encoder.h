@@ -72,7 +72,7 @@ public:
      * @retval 0    成功打开文件并编码
      * @retval -1   具体错误请查看控制台输出信息
      * */
-    int32_t decode();
+    int32_t encode();
 
     /**
      * @brief 关闭所有的编码相关struct，关闭文件
@@ -131,7 +131,7 @@ public:
      * */
     int32_t open_pcm(const char* InFilePath, const char* OutFilePath);
 
-    int32_t decode();
+    int32_t encode();
 
     void close();
 };
@@ -139,9 +139,13 @@ public:
 class t_encoder
 {
 private:
-
+    t_encode_yuv yuv_encoder;
+    t_encode_pcm pcm_encoder;
 public:
-
+    t_encoder(): yuv_encoder(t_encode_yuv()), pcm_encoder(t_encode_pcm()) {}
+public:
+    void encode(const char* YUVInFilePath, const char* YUVOutFilePath,
+                const char* PCMInFilePath, const char* PCMOutFilePath);
 };
 
 /* ff_player::t_packager
@@ -207,7 +211,8 @@ public:
     t_encoder_packager() = default;
     ~t_encoder_packager() = default;
 public:
-    void encode_and_package(const char* InFilePath, const char* OutFilePath);
+    void encode_and_package(const char* YUVInFilePath, const char* YUVOutFilePath,
+                            const char* PCMInFilePath, const char* PCMOutFilepath);
 };
 
 }

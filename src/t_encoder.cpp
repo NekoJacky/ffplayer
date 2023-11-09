@@ -97,7 +97,7 @@ namespace ff_player
         return 0;
     }
 
-    int32_t t_encode_yuv::decode()
+    int32_t t_encode_yuv::encode()
     {
         // test
         int32_t FrameCnt = 2847;
@@ -286,7 +286,7 @@ namespace ff_player
         return 0;
     }
 
-    int32_t t_encode_pcm::decode()
+    int32_t t_encode_pcm::encode()
     {
         // 设置重采样参数
         pAudioFrame->nb_samples = pAudioCodecCtx->frame_size;
@@ -300,12 +300,12 @@ namespace ff_player
                             &(pAudioFrame->ch_layout), AV_SAMPLE_FMT_FLTP, 44100, 0, nullptr);
         swr_init(pSwrCtx);
 
-        uint8_t **data;
-        data = (uint8_t**)calloc(pAudioCodecCtx->ch_layout.nb_channels, sizeof(*data));
-        av_samples_alloc(data, nullptr, pAudioCodecCtx->ch_layout.nb_channels, pAudioCodecCtx->frame_size,
+        uint8_t **convert_data;
+        convert_data = (uint8_t**)calloc(pAudioCodecCtx->ch_layout.nb_channels, sizeof(*convert_data));
+        av_samples_alloc(convert_data, nullptr, pAudioCodecCtx->ch_layout.nb_channels, pAudioCodecCtx->frame_size,
                          pAudioCodecCtx->sample_fmt, 0);
         size = av_samples_get_buffer_size(nullptr, pAudioCodecCtx->ch_layout.nb_channels,
-                                              pAudioCodecCtx->frame_size, pAudioCodecCtx->sample_fmt, 1);
+                                          pAudioCodecCtx->frame_size, pAudioCodecCtx->sample_fmt, 1);
         Buffer = (uint8_t*)av_malloc(size);
         avcodec_fill_audio_frame(pAudioFrame, pAudioCodecCtx->ch_layout.nb_channels,
                                  pAudioCodecCtx->sample_fmt, Buffer, (int)size, 1);
@@ -330,13 +330,70 @@ namespace ff_player
                 qDebug() << "End of infile";
                 break;
             }
+            swr_convert(pSwrCtx, convert_data, pAudioCodecCtx->frame_size,
+                        (const uint8_t**)pAudioFrame->data, pAudioFrame->nb_samples);
+
+            // 一帧数据长度
+            length = pAudioCodecCtx->frame_size * av_get_bytes_per_sample(pAudioCodecCtx->sample_fmt);
+            memcpy(pAudioFrame->data[0], convert_data[0], length);
+            memcpy(pAudioFrame->data[1], convert_data[0], length);
+
+            pAudioFrame->pts = i*100;
+            ret = avcodec_send_frame(pAudioCodecCtx, pAudioFrame);
+            if(ret < 0)
+            {
+                while(avcodec_receive_packet(pAudioCodecCtx, pkt) >= 0)
+                {
+                    pkt->stream_index = pAudioStream->index;
+                    qDebug() << "write " << i << " frame, size=" << size << ", length=" << length;
+                    av_write_frame(pFmtCtx, pkt);
+                }
+            }
+            av_packet_unref(pkt);
+
             i++;
         }
     }
 
     void t_encode_pcm::close()
     {
+        if(pFmtCtx) {
+            avio_close(pFmtCtx->pb);
+            avformat_free_context(pFmtCtx);
+            pFmtCtx = nullptr;
+        }
+        if(pOutFmt) pOutFmt = nullptr;
+        if(pkt)
+        {
+            av_packet_free(&pkt);
+            pkt = nullptr;
+        }
+        if(pAudioCodecCtx)
+        {
+            avcodec_close(pAudioCodecCtx);
+            avcodec_free_context(&pAudioCodecCtx);
+            pAudioCodecCtx = nullptr;
+        }
+        if(pAudioFrame) av_free(pAudioFrame);
+        if(Buffer) av_free(Buffer);
+        fclose(InFile);
+    }
 
+    void t_encoder::encode(const char *YUVInFilePath, const char *YUVOutFilePath,
+                           const char *PCMInFilePath, const char *PCMOutFilePath)
+    {
+        if(YUVInFilePath)
+        {
+            yuv_encoder.open_yuv(YUVInFilePath, YUVOutFilePath);
+            yuv_encoder.encode();
+            yuv_encoder.close();
+        }
+        if(PCMInFilePath)
+        {
+            pcm_encoder.open_pcm(PCMInFilePath, PCMOutFilePath);
+            pcm_encoder.encode();
+            pcm_encoder.close();
+        }
     }
 
     int32_t t_packager::open_h264(const char *InFilePath, const char* OutFilePath)
@@ -508,13 +565,12 @@ namespace ff_player
         }
     }
 
-    void t_encoder_packager::encode_and_package(const char* InFilePath, const char* OutFilePath)
+    void t_encoder_packager::encode_and_package(const char* YUVInFilePath, const char* YUVOutFilePath,
+                                                const char* PCMInFilePath, const char* PCMOutFilepath)
     {
-        // todo: 写完encoder以后撤销注释
-        /*encoder.open_yuv(InFilePath, "./temp.h264");
-        encoder.decode();
-        encoder.close();*/
-        packager.open_h264("./temp.h264", OutFilePath);
+        encoder.encode(YUVInFilePath, "./temp.h264",
+                       PCMInFilePath, PCMOutFilepath);
+        packager.open_h264("./temp.h264", YUVOutFilePath);
         packager.package();
         packager.close();
         std::remove("./temp.h264");

@@ -30,7 +30,7 @@ void test2::test()
 void test3::test()
 {
     encoder->open_yuv(in_filename, out_filename);
-    encoder->decode();
+    encoder->encode();
     encoder->close();
 }
 

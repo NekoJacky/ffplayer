@@ -1,7 +1,3 @@
-//
-// Created by Apple Inc on 2023/11/4.
-//
-
 #ifndef FFPLAYER_COMMENTS_H
 #define FFPLAYER_COMMENTS_H
 
