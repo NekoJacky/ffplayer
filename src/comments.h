@@ -62,4 +62,16 @@
  *      用于表示视频帧率
  * */
 
+/* 用到的函数/方法
+ *
+ * int sws_scale(struct SwsContext* c, const uint8_t* const srcSlice[],
+ *               const int srcStride[], int srcSliceY, int srcSliceH,
+ *               uint8_t* const dst[], const int dstStride[])
+ * c                    sws_get_context函数的返回值
+ * srcSlice, dst        输入输出图象数据各颜色通道的buffer指针数组
+ * srcStride, dstStride 输入输出图像数据各颜色通道每行存储的字节数数组
+ * srcSliceY            输入图像开始扫描的列，通常为0
+ * srcSliceH            输入共需扫描的行数，通常为输入图像的高度
+ * */
+
 #endif //FFPLAYER_COMMENTS_H

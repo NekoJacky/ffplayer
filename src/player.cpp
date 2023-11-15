@@ -1,5 +1,7 @@
 #include "player.h"
 
+#include <utility>
+
 player::player():
     FmtCtx(avformat_alloc_context()),
     VideoCodec(nullptr),
@@ -229,15 +231,6 @@ void player::run()
                 return ;
             }
             // 进行格式转换
-            /* int sws_scale(struct SwsContext* c, const uint8_t* const srcSlice[],
-             *               const int srcStride[], int srcSliceY, int srcSliceH,
-             *               uint8_t* const dst[], const int dstStride[])
-             * c                    sws_get_context函数的返回值
-             * srcSlice, dst        输入输出图象数据各颜色通道的buffer指针数组
-             * srcStride, dstStride 输入输出图像数据各颜色通道每行存储的字节数数组
-             * srcSliceY            输入图像开始扫描的列，通常为0
-             * srcSliceH            输入共需扫描的行数，通常为输入图像的高度
-             * */
             sws_scale(ImgCtx, YuvFrame->data, YuvFrame->linesize,
                       0, VideoCodecContext->height, RgbFrame->data,
                       RgbFrame->linesize);
@@ -250,4 +243,97 @@ void player::run()
         av_packet_unref(Pkt);
     }
     qDebug() << "<Player::Run> Video end";
+}
+
+AudioPlayer::~AudioPlayer()
+{
+    if(pIODevice->isOpen())
+    {
+        pAudioSink->stop();
+        pIODevice->close();
+    }
+    if(!pkt) av_packet_free(&pkt);
+    if(!pAudioCodecCtx) avcodec_free_context(&pAudioCodecCtx);
+    if(!pAudioCodecCtx) avcodec_close(pAudioCodecCtx);
+    if(!pAudioFmtCtx) avformat_close_input(&pAudioFmtCtx);
+}
+
+void AudioPlayer::setUrl(QString url)
+{
+    Url = std::move(url);
+}
+
+int32_t AudioPlayer::openFile()
+{
+    if(Url.isEmpty()) return -2;
+
+    ret = avformat_open_input(&pAudioFmtCtx, Url.toLocal8Bit().data(), nullptr, nullptr);
+    if(ret < 0)
+    {
+        qDebug() << "Can't open input file";
+        return -1;
+    }
+
+    ret = avformat_find_stream_info(pAudioFmtCtx, nullptr);
+    if(ret < 0)
+    {
+        qDebug() << "Can't find any stream info";
+        return -1;
+    }
+
+    av_dump_format(pAudioFmtCtx, 0, Url.toLocal8Bit().data(), 0);
+
+    auto StreamCnt = (int32_t)(pAudioFmtCtx->nb_streams);
+    for(int32_t i = 0; i < StreamCnt; i++)
+    {
+        if(pAudioFmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+        {
+            AudioStreamIndex = i;
+            continue;
+        }
+    }
+
+    if(AudioStreamIndex == -1)
+    {
+        qDebug() << "Can't find any Stream";
+        return -1;
+    }
+
+    // Audio
+    pAudioCodecPara = pAudioFmtCtx->streams[AudioStreamIndex]->codecpar;
+    pAudioCodec = const_cast<AVCodec*>(avcodec_find_decoder(pAudioCodecPara->codec_id));
+    if(!pAudioCodec)
+    {
+        qDebug() << "Can't find codec";
+    }
+
+    pAudioCodecCtx = avcodec_alloc_context3(pAudioCodec);
+    if(!pAudioCodecCtx)
+    {
+        qDebug() << "Can't alloc codec context";
+        return -1;
+    }
+
+    ret = avcodec_parameters_to_context(pAudioCodecCtx, pAudioCodecPara);
+    if(ret < 0)
+    {
+        qDebug() << "Can't init parameters";
+        return -1;
+    }
+
+    pAudioCodecCtx->pkt_timebase = pAudioFmtCtx->streams[AudioStreamIndex]->time_base;
+
+    ret = avcodec_open2(pAudioCodecCtx, pAudioCodec, nullptr);
+    if(ret < 0)
+    {
+        qDebug() << "Can't open audio codec";
+        return -1;
+    }
+
+    return 0;
+}
+
+void AudioPlayer::run()
+{
+
 }

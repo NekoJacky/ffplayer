@@ -10,6 +10,8 @@
 #include <QImage>
 #include <QDebug>
 #include <QFile>
+#include <QAudioSink>
+#include <QIODevice>
 
 #ifdef __cplusplus
 extern "C"
@@ -26,6 +28,7 @@ extern "C"
 #include <libavutil/mem.h>
 #include <libswscale/swscale.h>
 #include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
 #ifdef __cplusplus
 }
 #endif
@@ -37,18 +40,19 @@ private:
     AVFormatContext     *FmtCtx;
     AVCodec             *VideoCodec;
     AVCodecContext      *VideoCodecContext;
-    AVCodec             *AudioCodec;
-    AVCodecContext      *AudioCodecContext;
     AVPacket            *Pkt;
     AVFrame             *RgbFrame;
     AVFrame             *YuvFrame;
     struct SwsContext   *ImgCtx;
     const uchar         *OutBuffer;
     int32_t             VideoStreamIndex;
-    int32_t             AudioStreamIndex;
     int32_t             NumBytes;
     QString             Url;
     bool                StopFlag;
+
+    int32_t             AudioStreamIndex;
+    AVCodec             *AudioCodec;
+    AVCodecContext      *AudioCodecContext;
 
 public:
     player();
@@ -62,6 +66,45 @@ public:
     void setUrl(QString url);
     void setFlag(bool f);
     bool openFile();
+};
+
+class AudioPlayer: public QThread
+{
+    Q_OBJECT
+private:
+    AVFormatContext     *pAudioFmtCtx;
+    AVCodec             *pAudioCodec;
+    AVCodecContext      *pAudioCodecCtx;
+    AVPacket            *pkt;
+    AVFrame             *pAudioFrame;
+    SwrContext          *pSwrCtx;
+    uint8_t             *Buffer;
+    int32_t             OutCh;
+    int32_t             OutSampleRate;
+    enum AVSampleFormat OutSampleFmt;
+    AVCodecParameters   *pAudioCodecPara;
+    int32_t             AudioStreamIndex;
+    int32_t             NumBytes;
+    QAudioSink          *pAudioSink;
+    QIODevice           *pIODevice;
+    QString             Url;
+    int32_t             ret;
+
+public:
+    AudioPlayer(): pAudioFmtCtx(nullptr), pAudioCodec(nullptr),
+                   pAudioCodecCtx(nullptr), pkt(nullptr),
+                   pAudioFrame(nullptr), pSwrCtx(nullptr),
+                   Buffer(nullptr), OutCh(-1), OutSampleRate(-1),
+                   OutSampleFmt(AV_SAMPLE_FMT_FLTP),
+                   AudioStreamIndex(-1), NumBytes(-1),
+                   pAudioSink(nullptr), pIODevice(nullptr),
+                   Url(""), ret(-1) {}
+    ~AudioPlayer() override;
+protected:
+    void run() override;
+public:
+    void setUrl(QString url);
+    int32_t openFile();
 };
 
 #endif // DECODER_H
