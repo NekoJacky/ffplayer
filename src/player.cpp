@@ -133,15 +133,6 @@ bool player::openFile()
     }
 
     // 创建格式转换器，指定缩放算法，不添加滤镜
-    /* struct SwsContext sws_getContext(int srcW, int srcH, enum AVPixelFormat srcFormat,
-     *                                  int dstW, int dstH, enum AVPixelFormat dstFormat,
-     *                                  int flags, SwsFilter* srcFilter, SwsFilter* dstFilter,
-     *                                  const double* param)
-     * srcW, srcH           输入图片宽 高
-     * dstW, dstH           输出图片宽 高
-     * srcFormat, dstFormat 输入 输出图片格式
-     * flags                scale算法种类
-     * */
     ImgCtx = sws_getContext(VideoCodecContext->width,
                             VideoCodecContext->height,
                             VideoCodecContext->pix_fmt,
@@ -152,19 +143,6 @@ bool player::openFile()
     NumBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB32, VideoCodecContext->width,
                                         VideoCodecContext->height, 1);
     OutBuffer = (const uchar*)(av_malloc(NumBytes*sizeof(unsigned char)));
-    /* int av_image_fill_arrays(uint8_t **dst_data, int *dst_linesize,
-     *                          const uint8_t *src, AVPixelFormat pix_fmt,
-     *                          int width, int height, int align)
-     * dst_data     输出数据
-     * dst_linesize 输出数据的高度
-     * src          包含实际图像数据的Buffer
-     * pix_fmt      图像的数据格式
-     * width        图像宽度
-     * height       图像高度
-     * align        src中用于内存对齐的值，一般为1
-     *              使用1即为按1字节对齐，得到的结果与原先数据相同
-     *              如果为4则内存必须开始于4的倍数
-     * */
     int res = av_image_fill_arrays(RgbFrame->data, RgbFrame->linesize, (const uint8_t*)OutBuffer,
                                    AV_PIX_FMT_RGB32, VideoCodecContext->width,
                                    VideoCodecContext->height, 1);
@@ -330,10 +308,69 @@ int32_t AudioPlayer::openFile()
         return -1;
     }
 
+    AVChannelLayout OutChLayout = pAudioCodecCtx->ch_layout;
+    OutSampleRate = pAudioCodecCtx->sample_rate;
+    OutChannels = pAudioCodecCtx->ch_layout.nb_channels;
+
+    Buffer = (uint8_t*)av_malloc(max_audio_frame_size*2);
+
+    swr_alloc_set_opts2(&pSwrCtx, &OutChLayout, OutSampleFmt, OutSampleRate,
+                        &(pAudioCodecCtx->ch_layout), pAudioCodecCtx->sample_fmt,
+                        pAudioCodecCtx->sample_rate, 0, nullptr);
+
+    ret = swr_init(pSwrCtx);
+    if(ret)
+    {
+        qDebug() << "Can't init swr";
+        return -1;
+    }
+
     return 0;
 }
 
 void AudioPlayer::run()
 {
+    ret = openFile();
+    if(ret < 0)
+    {
+        qDebug() << "Can't open file";
+        return ;
+    }
 
+    int64_t SleepTime;
+    while(av_read_frame(pAudioFmtCtx, pkt) >= 0)
+    {
+        if(pkt->stream_index != AudioStreamIndex)
+            continue;
+        ret = avcodec_send_packet(pAudioCodecCtx, pkt);
+        if(ret < 0)
+        {
+            av_packet_unref(pkt);
+            continue;
+        }
+        while(avcodec_receive_frame(pAudioCodecCtx, pAudioFrame) >= 0)
+        {
+            int length = 0;
+            if(av_sample_fmt_is_planar(pAudioCodecCtx->sample_fmt))
+            {
+                length = swr_convert(pSwrCtx,
+                                         &Buffer,
+                                         (int)(max_audio_frame_size*2),
+                                         (const uint8_t **)pAudioFrame->data,
+                                         pAudioFrame->nb_samples);
+                if(length < 0)
+                    continue;
+            }
+
+            int OutSize = av_samples_get_buffer_size(nullptr, OutChannels, length,
+                                                     OutSampleFmt, 1);
+
+            SleepTime = (OutSampleRate*16*2)/8/OutSize;
+
+            if(pAudioSink->bytesFree() < OutSize)
+                msleep(SleepTime);
+            pIODevice->write((const char*)Buffer, OutSize);
+        }
+        av_packet_unref(pkt);
+    }
 }

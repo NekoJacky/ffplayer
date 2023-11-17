@@ -35,6 +35,7 @@
  *      每个AVStream对应一个AVCodecContext
  *      存储该视频/音频流使用解码方式的相关数据
  *      pkt_timebase    帧率?
+ *      AVChannelLayout ch_layout   声道布局和声道数
  *  AVCodec
  *      每个AVCodecContext中对应一个AVCodec
  *      包含该视频/音频对应的解码器
@@ -72,6 +73,29 @@
  * srcStride, dstStride 输入输出图像数据各颜色通道每行存储的字节数数组
  * srcSliceY            输入图像开始扫描的列，通常为0
  * srcSliceH            输入共需扫描的行数，通常为输入图像的高度
+ *
+ *
+ * int av_image_fill_arrays(uint8_t **dst_data, int *dst_linesize,
+ *                          const uint8_t *src, AVPixelFormat pix_fmt,
+ *                          int width, int height, int align)
+ * dst_data     输出数据
+ * dst_linesize 输出数据的高度
+ * src          包含实际图像数据的Buffer
+ * pix_fmt      图像的数据格式
+ * width        图像宽度
+ * height       图像高度
+ * align        src中用于内存对齐的值，一般为1
+ *              使用1即为按1字节对齐，得到的结果与原先数据相同
+ *              如果为4则内存必须开始于4的倍数
+ *
+ * struct SwsContext sws_getContext(int srcW, int srcH, enum AVPixelFormat srcFormat,
+ *                                  int dstW, int dstH, enum AVPixelFormat dstFormat,
+ *                                  int flags, SwsFilter* srcFilter, SwsFilter* dstFilter,
+ *                                  const double* param)
+ * srcW, srcH           输入图片宽 高
+ * dstW, dstH           输出图片宽 高
+ * srcFormat, dstFormat 输入 输出图片格式
+ * flags                scale算法种类
  * */
 
 #endif //FFPLAYER_COMMENTS_H

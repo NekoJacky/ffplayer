@@ -79,7 +79,7 @@ private:
     AVFrame             *pAudioFrame;
     SwrContext          *pSwrCtx;
     uint8_t             *Buffer;
-    int32_t             OutCh;
+    int32_t             OutChannels;
     int32_t             OutSampleRate;
     enum AVSampleFormat OutSampleFmt;
     AVCodecParameters   *pAudioCodecPara;
@@ -90,15 +90,20 @@ private:
     QString             Url;
     int32_t             ret;
 
+    const int64_t       max_audio_frame_size;
+
 public:
     AudioPlayer(): pAudioFmtCtx(nullptr), pAudioCodec(nullptr),
                    pAudioCodecCtx(nullptr), pkt(nullptr),
                    pAudioFrame(nullptr), pSwrCtx(nullptr),
-                   Buffer(nullptr), OutCh(-1), OutSampleRate(-1),
+                   Buffer(nullptr), OutChannels(-1), OutSampleRate(-1),
                    OutSampleFmt(AV_SAMPLE_FMT_FLTP),
+                   pAudioCodecPara(nullptr),
                    AudioStreamIndex(-1), NumBytes(-1),
-                   pAudioSink(nullptr), pIODevice(nullptr),
-                   Url(""), ret(-1) {}
+                   pAudioSink(new QAudioSink), pIODevice(pAudioSink->start()),
+                   Url(""), ret(-1), max_audio_frame_size(192000) {
+        pAudioSink->setVolume(15);
+    }
     ~AudioPlayer() override;
 protected:
     void run() override;
