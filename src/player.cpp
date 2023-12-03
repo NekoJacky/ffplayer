@@ -338,39 +338,47 @@ void AudioPlayer::run()
     }
 
     int64_t SleepTime;
-    while(av_read_frame(pAudioFmtCtx, pkt) >= 0)
+    while(flag)
     {
-        if(pkt->stream_index != AudioStreamIndex)
-            continue;
-        ret = avcodec_send_packet(pAudioCodecCtx, pkt);
-        if(ret < 0)
+        while (av_read_frame(pAudioFmtCtx, pkt) >= 0)
         {
-            av_packet_unref(pkt);
-            continue;
-        }
-        while(avcodec_receive_frame(pAudioCodecCtx, pAudioFrame) >= 0)
-        {
-            int length = 0;
-            if(av_sample_fmt_is_planar(pAudioCodecCtx->sample_fmt))
+            if (pkt->stream_index != AudioStreamIndex)
+                continue;
+            ret = avcodec_send_packet(pAudioCodecCtx, pkt);
+            if (ret < 0)
             {
-                length = swr_convert(pSwrCtx,
-                                         &Buffer,
-                                         (int)(max_audio_frame_size*2),
-                                         (const uint8_t **)pAudioFrame->data,
-                                         pAudioFrame->nb_samples);
-                if(length < 0)
-                    continue;
+                av_packet_unref(pkt);
+                continue;
             }
+            while (avcodec_receive_frame(pAudioCodecCtx, pAudioFrame) >= 0)
+            {
+                int length = 0;
+                if (av_sample_fmt_is_planar(pAudioCodecCtx->sample_fmt))
+                {
+                    length = swr_convert(pSwrCtx,
+                                         &Buffer,
+                                         (int) (max_audio_frame_size * 2),
+                                         (const uint8_t **) pAudioFrame->data,
+                                         pAudioFrame->nb_samples);
+                    if (length < 0)
+                        continue;
+                }
 
-            int OutSize = av_samples_get_buffer_size(nullptr, OutChannels, length,
-                                                     OutSampleFmt, 1);
+                int OutSize = av_samples_get_buffer_size(nullptr, OutChannels, length,
+                                                         OutSampleFmt, 1);
 
-            SleepTime = (OutSampleRate*16*2)/8/OutSize;
+                SleepTime = (OutSampleRate * 16 * 2) / 8 / OutSize;
 
-            if(pAudioSink->bytesFree() < OutSize)
-                msleep(SleepTime);
-            pIODevice->write((const char*)Buffer, OutSize);
+                if (pAudioSink->bytesFree() < OutSize)
+                    msleep(SleepTime);
+                pIODevice->write((const char *) Buffer, OutSize);
+            }
+            av_packet_unref(pkt);
         }
-        av_packet_unref(pkt);
     }
+}
+
+void AudioPlayer::setFlag(bool flag)
+{
+    Flag = flag;
 }

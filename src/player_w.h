@@ -33,19 +33,20 @@ class player_w : public QWidget
     Q_OBJECT
 
 private:
-    player  *Player;
-    QImage  Image;
-    QRect   rect;
-    int32_t h;
-    int32_t w;
-    bool    flag;
+    player      *Player;
+    AudioPlayer *APlayer;
+    QImage      Image;
+    QRect       rect;
+    int32_t     h;
+    int32_t     w;
+    bool        flag;
 
 public:
     explicit player_w(QWidget *parent = nullptr);
     ~player_w() override;
 
 public:
-    void setUrl(QString Url);
+    void setUrl(const QString& Url);
     void play();
     void stop();
 

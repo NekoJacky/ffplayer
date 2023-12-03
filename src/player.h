@@ -89,6 +89,7 @@ private:
     QIODevice           *pIODevice;
     QString             Url;
     int32_t             ret;
+    bool                Flag;
 
     const int64_t       max_audio_frame_size;
 
@@ -101,7 +102,8 @@ public:
                    pAudioCodecPara(nullptr),
                    AudioStreamIndex(-1), NumBytes(-1),
                    pAudioSink(new QAudioSink), pIODevice(pAudioSink->start()),
-                   Url(""), ret(-1), max_audio_frame_size(192000) {
+                   Url(""), ret(-1), max_audio_frame_size(192000),
+                   Flag(false){
         pAudioSink->setVolume(15);
     }
     ~AudioPlayer() override;
@@ -110,6 +112,7 @@ protected:
 public:
     void setUrl(QString url);
     int32_t openFile();
+    void setFlag(bool flag);
 };
 
 #endif // DECODER_H

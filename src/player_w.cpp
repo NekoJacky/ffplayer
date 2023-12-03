@@ -6,6 +6,7 @@ player_w::player_w(QWidget *parent) :
     QWidget(parent)
 {
     Player = new player();
+    APlayer = new AudioPlayer();
     QScreen* screen = QGuiApplication::primaryScreen();
     rect = screen->geometry();
     w = rect.width() - 100;
@@ -13,8 +14,11 @@ player_w::player_w(QWidget *parent) :
     flag = false;
     connect(Player, SIGNAL(sendQImage(QImage)), this, SLOT(receiveImage(QImage)));
     connect(Player, &player::finished, Player, &player::deleteLater);
+    connect(APlayer, &AudioPlayer::finished, APlayer, &AudioPlayer::deleteLater);
     connect(this, &player_w::stopPlay, [this](){ Player->setFlag(false); });
+    connect(this, &player_w::stopPlay, [this](){ APlayer->setFlag(false); });
     connect(this, &player_w::startPlay, [this](){ Player->setFlag(true); });
+    connect(this, &player_w::startPlay, [this](){ APlayer->setFlag(true);});
 }
 
 player_w::~player_w()
@@ -23,9 +27,10 @@ player_w::~player_w()
         stop();
 }
 
-void player_w::setUrl(QString Url)
+void player_w::setUrl(const QString& Url)
 {
-    Player->setUrl(std::move(Url));
+    Player->setUrl(Url);
+    APlayer->setUrl(Url);
 }
 
 void player_w::play()
@@ -33,6 +38,7 @@ void player_w::play()
     stop();
     emit startPlay();
     Player->start();
+    APlayer->start();
 }
 
 void player_w::stop()
