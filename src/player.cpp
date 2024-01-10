@@ -338,7 +338,7 @@ void AudioPlayer::run()
     }
 
     int64_t SleepTime;
-    while(flag)
+    while(Flag)
     {
         while (av_read_frame(pAudioFmtCtx, pkt) >= 0)
         {

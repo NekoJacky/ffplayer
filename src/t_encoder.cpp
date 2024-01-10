@@ -353,6 +353,8 @@ namespace ff_player
 
             i++;
         }
+
+        return 0;
     }
 
     void t_encode_pcm::close()
