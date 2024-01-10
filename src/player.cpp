@@ -225,11 +225,6 @@ void player::run()
 
 AudioPlayer::~AudioPlayer()
 {
-    if(pIODevice->isOpen())
-    {
-        pAudioSink->stop();
-        pIODevice->close();
-    }
     if(!pkt) av_packet_free(&pkt);
     if(!pAudioCodecCtx) avcodec_free_context(&pAudioCodecCtx);
     if(!pAudioCodecCtx) avcodec_close(pAudioCodecCtx);
@@ -338,6 +333,7 @@ void AudioPlayer::run()
     }
 
     int64_t SleepTime;
+    /*pIODevice = pAudioSink->start();*/
     while(av_read_frame(pAudioFmtCtx, pkt) >= 0)
     {
         if(pkt->stream_index != AudioStreamIndex)
@@ -367,10 +363,15 @@ void AudioPlayer::run()
 
             SleepTime = (OutSampleRate*16*2)/8/OutSize;
 
-            if(pAudioSink->bytesFree() < OutSize)
+            /*if(pAudioSink->bytesFree() < OutSize)
                 msleep(SleepTime);
-            pIODevice->write((const char*)Buffer, OutSize);
+            pIODevice->write((const char*)Buffer, OutSize);*/
         }
         av_packet_unref(pkt);
     }
+    /*if(pIODevice->isOpen())
+    {
+        pAudioSink->stop();
+        pIODevice->close();
+    }*/
 }
