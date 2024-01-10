@@ -6,6 +6,8 @@ find_package(Qt6 COMPONENTS
 
 include_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/include)
 link_directories(D:/Environment/ffmpeg/ffmpeg-master-latest-win64-gpl-shared/lib)
+include_directories(D:/apps/Qt/6.5.3/mingw_64/include)
+link_directories(D:/apps/Qt/6.5.3/mingw_64/lib)
 
 aux_source_directory(. SRC)
 
