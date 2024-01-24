@@ -162,48 +162,48 @@ void player::run()
         qDebug() << "<OpenFile><Run> Can't open_yuv file";
         return ;
     }
-    int res;
+    int ret;
     while(StopFlag)
     {
-        res = av_read_frame(FmtCtx, Pkt);
-        if(res == AVERROR_EOF)
+        ret = av_read_frame(FmtCtx, Pkt);
+        if(ret == AVERROR_EOF)
         {
             qDebug() << "<ReadFrame> Reached the file end";
             break;
         }
-        else if(res < 0)
+        else if(ret < 0)
         {
-            qDebug() << "<ReadFrame> Can't read frame, code:" << res;
+            qDebug() << "<ReadFrame> Can't read frame, code:" << ret;
             return ;
         }
         if(Pkt->stream_index == VideoStreamIndex)
         {
-            res = avcodec_send_packet(VideoCodecContext, Pkt);
-            if(res == AVERROR(EAGAIN))
+            ret = avcodec_send_packet(VideoCodecContext, Pkt);
+            if(ret == AVERROR(EAGAIN))
             {
                 qDebug() << "<SendPkt> Buffer Full";
             }
-            else if(res == AVERROR(EOF))
+            else if(ret == AVERROR(EOF))
             {
                 qDebug() << "<SendPkt> Input File End";
             }
-            else if(res < 0)
+            else if(ret < 0)
             {
                 qDebug() << "<SendPkt> Fail to Send Packet to AVCodec";
                 return ;
             }
-            res = avcodec_receive_frame(VideoCodecContext, YuvFrame);
-            if(res == AVERROR(EAGAIN))
+            ret = avcodec_receive_frame(VideoCodecContext, YuvFrame);
+            if(ret == AVERROR(EAGAIN))
             {
                 qDebug() << "<ReceivePkt> No Output Data";
                 continue;
             }
-            else if(res == AVERROR_EOF)
+            else if(ret == AVERROR_EOF)
             {
                 qDebug() << "<ReceivePkt> Output File End";
                 break;
             }
-            else if(res < 0)
+            else if(ret < 0)
             {
                 qDebug() << "<ReceivePkt> Fail to Receive Frame from AVCodec";
                 return ;
@@ -259,7 +259,7 @@ int32_t AudioPlayer::openFile()
         return -1;
     }
 
-    av_dump_format(pAudioFmtCtx, 0, Url.toLocal8Bit().data(), 0);
+    // av_dump_format(pAudioFmtCtx, 0, Url.toLocal8Bit().data(), 0);
 
     auto StreamCnt = (int32_t)(pAudioFmtCtx->nb_streams);
     for(int32_t i = 0; i < StreamCnt; i++)

@@ -27,7 +27,7 @@ player_w::~player_w()
         stop();
 }
 
-void player_w::setUrl(const QString& Url)
+void player_w::setUrl(QString Url)
 {
     Player->setUrl(Url);
     APlayer->setUrl(Url);

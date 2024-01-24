@@ -13,7 +13,7 @@ Widget::Widget(QWidget *parent) :
     connect(ui->PlayBtn, &QPushButton::clicked, this, &Widget::clickedPlayBtn);
     connect(ui->StopBtn, &QPushButton::clicked, this, &Widget::clickedStopBtn);
     connect(ui->OpenFileBtn, &QPushButton::clicked, [this](){
-        auto *Dlg = new QFileDialog();
+        auto *Dlg = new QFileDialog(nullptr, "", R"(D:\Project\C\ffplayer\test\videos)");
         this->FilePath = QFileDialog::getOpenFileName();
         setUrl(FilePath);
         delete Dlg;

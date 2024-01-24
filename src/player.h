@@ -12,6 +12,7 @@
 #include <QFile>
 #include <QAudioSink>
 #include <QIODevice>
+#include <QMediaDevices>
 
 #ifdef __cplusplus
 extern "C"
@@ -95,15 +96,18 @@ private:
 
 public:
     AudioPlayer(): pAudioFmtCtx(nullptr), pAudioCodec(nullptr),
-                   pAudioCodecCtx(nullptr), pkt(nullptr),
-                   pAudioFrame(nullptr), pSwrCtx(nullptr),
+                   pAudioCodecCtx(nullptr), pkt(av_packet_alloc()),
+                   pAudioFrame(av_frame_alloc()), pSwrCtx(nullptr),
                    Buffer(nullptr), OutChannels(-1), OutSampleRate(-1),
                    OutSampleFmt(AV_SAMPLE_FMT_FLTP),
                    pAudioCodecPara(nullptr),
                    AudioStreamIndex(-1), NumBytes(-1),
-                   pAudioSink(new QAudioSink), pIODevice(pAudioSink->start()),
                    Url(""), ret(-1), max_audio_frame_size(192000),
-                   Flag(false){
+                   Flag(false), pIODevice(nullptr) {
+        QMediaDevices MediaDevices;
+        QAudioDevice pAudioDevice = QMediaDevices::defaultAudioOutput();
+        QAudioFormat AudioFmt = pAudioDevice.preferredFormat();
+        pAudioSink = new QAudioSink(pAudioDevice, AudioFmt);
         pAudioSink->setVolume(15);
     }
     ~AudioPlayer() override;

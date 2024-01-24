@@ -46,7 +46,7 @@ public:
     ~player_w() override;
 
 public:
-    void setUrl(const QString& Url);
+    void setUrl(QString Url);
     void play();
     void stop();
 
