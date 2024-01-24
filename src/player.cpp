@@ -162,48 +162,48 @@ void player::run()
         qDebug() << "<OpenFile><Run> Can't open_yuv file";
         return ;
     }
-    int ret;
+    int res;
     while(StopFlag)
     {
-        ret = av_read_frame(FmtCtx, Pkt);
-        if(ret == AVERROR_EOF)
+        res = av_read_frame(FmtCtx, Pkt);
+        if(res == AVERROR_EOF)
         {
             qDebug() << "<ReadFrame> Reached the file end";
             break;
         }
-        else if(ret < 0)
+        else if(res < 0)
         {
-            qDebug() << "<ReadFrame> Can't read frame, code:" << ret;
+            qDebug() << "<ReadFrame> Can't read frame, code:" << res;
             return ;
         }
         if(Pkt->stream_index == VideoStreamIndex)
         {
-            ret = avcodec_send_packet(VideoCodecContext, Pkt);
-            if(ret == AVERROR(EAGAIN))
+            res = avcodec_send_packet(VideoCodecContext, Pkt);
+            if(res == AVERROR(EAGAIN))
             {
                 qDebug() << "<SendPkt> Buffer Full";
             }
-            else if(ret == AVERROR(EOF))
+            else if(res == AVERROR(EOF))
             {
                 qDebug() << "<SendPkt> Input File End";
             }
-            else if(ret < 0)
+            else if(res < 0)
             {
                 qDebug() << "<SendPkt> Fail to Send Packet to AVCodec";
                 return ;
             }
-            ret = avcodec_receive_frame(VideoCodecContext, YuvFrame);
-            if(ret == AVERROR(EAGAIN))
+            res = avcodec_receive_frame(VideoCodecContext, YuvFrame);
+            if(res == AVERROR(EAGAIN))
             {
                 qDebug() << "<ReceivePkt> No Output Data";
                 continue;
             }
-            else if(ret == AVERROR_EOF)
+            else if(res == AVERROR_EOF)
             {
                 qDebug() << "<ReceivePkt> Output File End";
                 break;
             }
-            else if(ret < 0)
+            else if(res < 0)
             {
                 qDebug() << "<ReceivePkt> Fail to Receive Frame from AVCodec";
                 return ;
@@ -225,11 +225,6 @@ void player::run()
 
 AudioPlayer::~AudioPlayer()
 {
-    if(pIODevice->isOpen())
-    {
-        pAudioSink->stop();
-        pIODevice->close();
-    }
     if(!pkt) av_packet_free(&pkt);
     if(!pAudioCodecCtx) avcodec_free_context(&pAudioCodecCtx);
     if(!pAudioCodecCtx) avcodec_close(pAudioCodecCtx);
@@ -259,7 +254,7 @@ int32_t AudioPlayer::openFile()
         return -1;
     }
 
-    // av_dump_format(pAudioFmtCtx, 0, Url.toLocal8Bit().data(), 0);
+    av_dump_format(pAudioFmtCtx, 0, Url.toLocal8Bit().data(), 0);
 
     auto StreamCnt = (int32_t)(pAudioFmtCtx->nb_streams);
     for(int32_t i = 0; i < StreamCnt; i++)
@@ -338,6 +333,7 @@ void AudioPlayer::run()
     }
 
     int64_t SleepTime;
+    /*pIODevice = pAudioSink->start();*/
     while(Flag)
     {
         while (av_read_frame(pAudioFmtCtx, pkt) >= 0)
@@ -357,24 +353,23 @@ void AudioPlayer::run()
                 {
                     length = swr_convert(pSwrCtx,
                                          &Buffer,
-                                         (int) (max_audio_frame_size * 2),
-                                         (const uint8_t **) pAudioFrame->data,
+                                         (int)(max_audio_frame_size*2),
+                                         (const uint8_t **)pAudioFrame->data,
                                          pAudioFrame->nb_samples);
-                    if (length < 0)
-                        continue;
-                }
-
-                int OutSize = av_samples_get_buffer_size(nullptr, OutChannels, length,
-                                                         OutSampleFmt, 1);
-
-                SleepTime = (OutSampleRate * 16 * 2) / 8 / OutSize;
-
-                if (pAudioSink->bytesFree() < OutSize)
-                    msleep(SleepTime);
-                pIODevice->write((const char *) Buffer, OutSize);
+                if(length < 0)
+                    continue;
             }
-            av_packet_unref(pkt);
+
+            int OutSize = av_samples_get_buffer_size(nullptr, OutChannels, length,
+                                                     OutSampleFmt, 1);
+
+            SleepTime = (OutSampleRate*16*2)/8/OutSize;
+
+            if(pAudioSink->bytesFree() < OutSize)
+                msleep(SleepTime);
+            pIODevice->write((const char*)Buffer, OutSize);
         }
+        av_packet_unref(pkt);
     }
 }
 

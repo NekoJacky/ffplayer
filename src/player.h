@@ -13,6 +13,7 @@
 #include <QAudioSink>
 #include <QIODevice>
 #include <QMediaDevices>
+#include <QAudioFormat>
 
 #ifdef __cplusplus
 extern "C"
@@ -91,7 +92,6 @@ private:
     QString             Url;
     int32_t             ret;
     bool                Flag;
-
     const int64_t       max_audio_frame_size;
 
 public:
