@@ -326,15 +326,15 @@ int32_t AudioPlayer::openFile()
 void AudioPlayer::run()
 {
     ret = openFile();
-    if(ret < 0)
+    if (ret < 0)
     {
         qDebug() << "Can't open file";
-        return ;
+        return;
     }
 
     int64_t SleepTime;
     /*pIODevice = pAudioSink->start();*/
-    while(Flag)
+    while (Flag)
     {
         while (av_read_frame(pAudioFmtCtx, pkt) >= 0)
         {
@@ -353,27 +353,27 @@ void AudioPlayer::run()
                 {
                     length = swr_convert(pSwrCtx,
                                          &Buffer,
-                                         (int)(max_audio_frame_size*2),
-                                         (const uint8_t **)pAudioFrame->data,
+                                         (int) (max_audio_frame_size * 2),
+                                         (const uint8_t **) pAudioFrame->data,
                                          pAudioFrame->nb_samples);
-                if(length < 0)
-                    continue;
+                    if (length < 0)
+                        continue;
+                }
+
+                int OutSize = av_samples_get_buffer_size(nullptr, OutChannels, length,
+                                                         OutSampleFmt, 1);
+
+                SleepTime = (OutSampleRate * 16 * 2) / 8 / OutSize;
+
+                if (pAudioSink->bytesFree() < OutSize)
+                    msleep(SleepTime);
+                pIODevice->write((const char *) Buffer, OutSize);
             }
-
-            int OutSize = av_samples_get_buffer_size(nullptr, OutChannels, length,
-                                                     OutSampleFmt, 1);
-
-            SleepTime = (OutSampleRate*16*2)/8/OutSize;
-
-            if(pAudioSink->bytesFree() < OutSize)
-                msleep(SleepTime);
-            pIODevice->write((const char*)Buffer, OutSize);
+            av_packet_unref(pkt);
         }
-        av_packet_unref(pkt);
     }
 }
 
-void AudioPlayer::setFlag(bool flag)
-{
+void AudioPlayer::setFlag(bool flag) {
     Flag = flag;
 }
