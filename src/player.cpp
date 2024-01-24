@@ -309,9 +309,9 @@ int32_t AudioPlayer::openFile()
 
     Buffer = (uint8_t*)av_malloc(max_audio_frame_size*2);
 
-    swr_alloc_set_opts2(&pSwrCtx, &OutChLayout, OutSampleFmt, OutSampleRate,
-                        &(pAudioCodecCtx->ch_layout), pAudioCodecCtx->sample_fmt,
-                        pAudioCodecCtx->sample_rate, 0, nullptr);
+    pSwrCtx = swr_alloc_set_opts(nullptr, OutChLayout.nb_channels, OutSampleFmt, OutSampleRate,
+                                 pAudioCodecCtx->ch_layout.nb_channels, pAudioCodecCtx->sample_fmt,
+                                 pAudioCodecCtx->sample_rate, 0, nullptr);
 
     ret = swr_init(pSwrCtx);
     if(ret)
@@ -333,7 +333,7 @@ void AudioPlayer::run()
     }
 
     int64_t SleepTime;
-    /*pIODevice = pAudioSink->start();*/
+    pIODevice = pAudioSink->start();
     while (Flag)
     {
         while (av_read_frame(pAudioFmtCtx, pkt) >= 0)
